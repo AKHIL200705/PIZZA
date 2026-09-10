@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, useRef } from "react";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, MailCheck, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { btnPrimary, Field, inputClass } from "@/components/site/ui";
@@ -67,6 +67,8 @@ function AuthPage() {
   const [errors, setErrors] = useState<Errors>({});
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const [unverifiedEmail, setUnverifiedEmail] = useState("");
+  const [resending, setResending] = useState(false);
   const [gsiLoaded, setGsiLoaded] = useState(false);
   const googleBtnContainerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -75,6 +77,54 @@ function AuthPage() {
   useEffect(() => {
     if (user) navigate({ to: "/menu", replace: true });
   }, [user, navigate]);
+
+  // Automatic token detection for email verification from email link
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get("token");
+      if (token) {
+        setLoading(true);
+        fetch(`${API_BASE}/api/auth/verify-email?token=${token}`)
+          .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
+          .then(({ ok, data }) => {
+            if (ok) {
+              toast.success("Email verified successfully! You can now log in.");
+              setMode("login");
+              setUnverifiedEmail("");
+            } else {
+              toast.error(data.message || "Invalid or expired verification link");
+            }
+            // Clean token from URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+          })
+          .catch(() => {
+            toast.error("Could not verify email token");
+          })
+          .finally(() => setLoading(false));
+      }
+    }
+  }, []);
+
+  // Resend verification email handler
+  const handleResendVerification = async () => {
+    if (!unverifiedEmail) return;
+    setResending(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/resend-verification`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: unverifiedEmail }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to resend verification email");
+      toast.success("Fresh verification link sent! Please check your email.");
+    } catch (err: any) {
+      toast.error(err.message || "Could not resend email");
+    } finally {
+      setResending(false);
+    }
+  };
 
   // Authenticate with backend using Google OAuth Credential (ID Token)
   const handleGoogleCredentialResponse = async (response: any) => {
@@ -99,7 +149,7 @@ function AuthPage() {
         return;
       }
     } catch {
-      // Backend not reached directly (e.g. deployed frontend on Vercel)
+      // Backend not reached directly
     }
 
     // Client-side fallback decoding for Google ID Token:
@@ -201,6 +251,8 @@ function AuthPage() {
     event.preventDefault();
     if (!validate()) return;
     setLoading(true);
+    setUnverifiedEmail("");
+
     try {
       if (mode === "register") {
         try {
@@ -208,8 +260,8 @@ function AuthPage() {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              name: form.name,
-              email: form.email,
+              name: form.name.trim(),
+              email: form.email.trim(),
               password: form.password,
             }),
           });
@@ -245,11 +297,20 @@ function AuthPage() {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              email: form.email,
+              email: form.email.trim(),
               password: form.password,
             }),
           });
           const data = await res.json();
+
+          // CRITICAL CHECK: Unverified account rejection
+          if (res.status === 403 || data.unverified) {
+            setUnverifiedEmail(form.email.trim());
+            toast.error("Please verify your email before logging in.");
+            setLoading(false);
+            return;
+          }
+
           if (!res.ok) throw new Error(data.message || "Invalid credentials");
           localStorage.setItem("pizzahub_token", data.token);
           localStorage.setItem("pizzahub_user", JSON.stringify(data.user));
@@ -282,13 +343,22 @@ function AuthPage() {
   if (sent) {
     return (
       <div className="mx-auto max-w-md px-4 py-24 text-center">
-        <div className="glass-card rounded-2xl p-10">
+        <div className="glass-card rounded-2xl p-10 border border-border/80 shadow-2xl">
+          <span className="ember-gradient mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl shadow-lg">
+            <MailCheck className="h-6 w-6 text-primary-foreground" aria-hidden />
+          </span>
           <h1 className="font-display text-3xl font-extrabold">Verify your email</h1>
           <p className="mt-3 text-sm text-muted-foreground">
-            We sent a confirmation link to <strong>{form.email}</strong>. Click it to
-            activate your account, then come back and sign in.
+            We sent a confirmation link to <strong>{form.email}</strong>. Click it to activate
+            your account, then come back and sign in.
           </p>
-          <button onClick={() => setSent(false)} className={`${btnPrimary} mt-6 w-full`}>
+          <button
+            onClick={() => {
+              setSent(false);
+              setMode("login");
+            }}
+            className={`${btnPrimary} mt-6 w-full`}
+          >
             Back to sign in
           </button>
         </div>
@@ -298,7 +368,7 @@ function AuthPage() {
 
   return (
     <div className="mx-auto max-w-md px-4 py-16">
-      <div className="glass-card rounded-2xl p-8 shadow-xl">
+      <div className="glass-card rounded-2xl p-8 shadow-xl border border-border/80">
         <div className="mb-6 grid grid-cols-2 gap-1 rounded-xl bg-secondary/60 p-1">
           {(["login", "register"] as const).map((m) => (
             <button
@@ -306,9 +376,10 @@ function AuthPage() {
               onClick={() => {
                 setMode(m);
                 setErrors({});
+                setUnverifiedEmail("");
               }}
               className={`rounded-lg py-2 text-sm font-semibold transition-colors ${
-                mode === m ? "ember-gradient text-primary-foreground" : "text-muted-foreground"
+                mode === m ? "ember-gradient text-primary-foreground shadow-sm" : "text-muted-foreground"
               }`}
             >
               {m === "login" ? "Sign in" : "Register"}
@@ -316,7 +387,7 @@ function AuthPage() {
           ))}
         </div>
 
-        <h1 className="font-display text-2xl font-extrabold">
+        <h1 className="font-display text-2xl font-extrabold tracking-tight">
           {mode === "login" ? "Welcome back" : "Create your account"}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -324,6 +395,31 @@ function AuthPage() {
             ? "Sign in to order and track your pizzas."
             : "It takes less than a minute."}
         </p>
+
+        {/* Unverified Email Alert Banner with Resend Option */}
+        {unverifiedEmail && (
+          <div className="mt-5 rounded-xl border border-warning/40 bg-warning/10 p-4 text-xs">
+            <div className="flex items-start gap-2 text-warning">
+              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold text-warning">
+                  Please verify your email before logging in.
+                </p>
+                <p className="mt-1 text-muted-foreground">
+                  A verification link was sent to <strong>{unverifiedEmail}</strong>.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleResendVerification}
+                  disabled={resending}
+                  className="mt-2.5 font-bold text-primary underline hover:opacity-80 transition-opacity"
+                >
+                  {resending ? "Resending verification email..." : "Resend verification email"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <form onSubmit={submit} className="mt-6 space-y-4" noValidate>
           {mode === "register" && (
@@ -342,7 +438,10 @@ function AuthPage() {
               className={inputClass}
               type="email"
               value={form.email}
-              onChange={(e) => set("email", e.target.value)}
+              onChange={(e) => {
+                set("email", e.target.value);
+                setUnverifiedEmail("");
+              }}
               placeholder="you@example.com"
               autoComplete="email"
             />
@@ -369,7 +468,11 @@ function AuthPage() {
             </Field>
           )}
 
-          <button type="submit" disabled={loading} className={`${btnPrimary} w-full shadow-md`}>
+          <button
+            type="submit"
+            disabled={loading}
+            className={`${btnPrimary} w-full shadow-md flex items-center justify-center gap-2`}
+          >
             {loading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
             {mode === "login" ? "Sign in" : "Create account"}
           </button>
@@ -405,8 +508,8 @@ function AuthPage() {
           <Link to="/forgot-password" className="hover:text-foreground">
             Forgot password?
           </Link>
-          <Link to="/admin-login" className="hover:text-foreground">
-            Staff login
+          <Link to="/admin-login" className="hover:text-foreground font-medium text-primary">
+            Staff console →
           </Link>
         </div>
       </div>

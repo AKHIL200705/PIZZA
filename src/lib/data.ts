@@ -31,6 +31,8 @@ export type CartItem = {
   details: Record<string, unknown>;
 };
 
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
 export type Order = {
   id: string;
   user_id: string;
@@ -45,6 +47,7 @@ export type Order = {
   payment_status: string;
   created_at: string;
   updated_at: string;
+  items?: OrderItem[];
 };
 
 export type OrderItem = {
@@ -130,6 +133,26 @@ export function useIngredients() {
   return useQuery({
     queryKey: ["ingredients"],
     queryFn: async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/ingredients`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.length > 0) {
+            return data.map((i: any) => ({
+              id: i._id || i.id,
+              name: i.name,
+              category: i.category,
+              price: i.price,
+              stock_qty: i.stock_qty,
+              low_stock_threshold: i.low_stock_threshold,
+              sort_order: i.sort_order || 0,
+            })) as Ingredient[];
+          }
+        }
+      } catch {
+        // fallback
+      }
+
       try {
         const { data, error } = await supabase
           .from("ingredients")
@@ -248,7 +271,7 @@ export function useMyOrders(userId?: string) {
     queryFn: async () => {
       try {
         const token = localStorage.getItem("pizzahub_token");
-        const res = await fetch(`http://localhost:5000/api/orders/user/${userId}`, {
+        const res = await fetch(`${API_BASE}/api/orders/user/${userId}`, {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
         if (res.ok) {
@@ -267,6 +290,15 @@ export function useMyOrders(userId?: string) {
             payment_status: o.payment_status,
             created_at: o.createdAt || new Date().toISOString(),
             updated_at: o.updatedAt || new Date().toISOString(),
+            items: (o.items || []).map((it: any, idx: number) => ({
+              id: it._id || `item-${idx}`,
+              order_id: o._id || o.id,
+              name: it.name,
+              image_key: it.image_key || "custom",
+              unit_price: it.unit_price,
+              quantity: it.quantity,
+              details: it.details || {},
+            })),
           })) as Order[];
         }
       } catch {
@@ -289,7 +321,7 @@ export function useOrder(orderId: string) {
     queryKey: ["order", orderId],
     queryFn: async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/orders/${orderId}`);
+        const res = await fetch(`${API_BASE}/api/orders/${orderId}`);
         if (res.ok) {
           const o = await res.json();
           const order: Order = {
@@ -356,7 +388,7 @@ export function useAllOrders(enabled: boolean) {
     queryFn: async () => {
       try {
         const token = localStorage.getItem("pizzahub_token");
-        const res = await fetch("http://localhost:5000/api/orders/admin/all", {
+        const res = await fetch(`${API_BASE}/api/orders/admin/all`, {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
         if (res.ok) {
@@ -375,6 +407,15 @@ export function useAllOrders(enabled: boolean) {
             payment_status: o.payment_status,
             created_at: o.createdAt || new Date().toISOString(),
             updated_at: o.updatedAt || new Date().toISOString(),
+            items: (o.items || []).map((it: any, idx: number) => ({
+              id: it._id || `item-${idx}`,
+              order_id: o._id || o.id,
+              name: it.name,
+              image_key: it.image_key || "custom",
+              unit_price: it.unit_price,
+              quantity: it.quantity,
+              details: it.details || {},
+            })),
           })) as Order[];
         }
       } catch {
@@ -391,7 +432,7 @@ export function useUpdateOrderStatus() {
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
       try {
         const token = localStorage.getItem("pizzahub_token");
-        const res = await fetch(`http://localhost:5000/api/orders/admin/${id}/status`, {
+        const res = await fetch(`${API_BASE}/api/orders/admin/${id}/status`, {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
@@ -418,20 +459,22 @@ export function useUpdateStock() {
       id,
       stock_qty,
       low_stock_threshold,
+      delta_qty,
     }: {
       id: string;
-      stock_qty: number;
+      stock_qty?: number;
       low_stock_threshold?: number;
+      delta_qty?: number;
     }) => {
       try {
         const token = localStorage.getItem("pizzahub_token");
-        await fetch(`http://localhost:5000/api/ingredients/${id}`, {
+        await fetch(`${API_BASE}/api/ingredients/${id}`, {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
-          body: JSON.stringify({ stock_qty, low_stock_threshold }),
+          body: JSON.stringify({ stock_qty, low_stock_threshold, delta_qty }),
         });
       } catch {
         // ignore

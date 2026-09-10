@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { Loader2, KeyRound } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { btnPrimary, Field, inputClass } from "@/components/site/ui";
 
@@ -18,6 +19,8 @@ export const Route = createFileRoute("/reset-password")({
   }),
   component: ResetPassword,
 });
+
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 function ResetPassword() {
   const [password, setPassword] = useState("");
@@ -47,7 +50,7 @@ function ResetPassword() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password.length < 8 || !/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) {
-      toast.error("Password needs 8+ characters with letters and numbers");
+      toast.error("Password needs 8+ characters with both letters and numbers");
       return;
     }
     if (password !== confirm) {
@@ -60,7 +63,7 @@ function ResetPassword() {
     const token = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("token") : null;
     if (token) {
       try {
-        const res = await fetch("http://localhost:5000/api/auth/reset-password", {
+        const res = await fetch(`${API_BASE}/api/auth/reset-password`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ token, newPassword: password }),
@@ -90,12 +93,14 @@ function ResetPassword() {
 
   return (
     <div className="mx-auto max-w-md px-4 py-20">
-      <div className="glass-card rounded-2xl p-8">
-        <h1 className="font-display text-2xl font-extrabold">Set a new password</h1>
+      <div className="glass-card rounded-2xl p-8 border border-border/80 shadow-2xl">
+        <span className="ember-gradient mb-4 flex h-12 w-12 items-center justify-center rounded-2xl shadow-lg">
+          <KeyRound className="h-6 w-6 text-primary-foreground" aria-hidden />
+        </span>
+        <h1 className="font-display text-2xl font-extrabold tracking-tight">Set a new password</h1>
         {!ready ? (
           <p className="mt-3 text-sm text-muted-foreground">
-            Open this page from the reset link in your email. If the link has expired,
-            request a new one.
+            Open this page from the reset link in your email. If the link has expired, please request a fresh reset link.
           </p>
         ) : (
           <form onSubmit={submit} className="mt-6 space-y-4">
@@ -104,6 +109,7 @@ function ResetPassword() {
                 className={inputClass}
                 type="password"
                 value={password}
+                placeholder="At least 8 characters"
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="new-password"
               />
@@ -113,12 +119,17 @@ function ResetPassword() {
                 className={inputClass}
                 type="password"
                 value={confirm}
+                placeholder="Re-enter password"
                 onChange={(e) => setConfirm(e.target.value)}
                 autoComplete="new-password"
               />
             </Field>
-            <button disabled={loading} className={`${btnPrimary} w-full`}>
-              Update password
+            <button
+              disabled={loading}
+              className={`${btnPrimary} w-full flex items-center justify-center gap-2`}
+            >
+              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+              {loading ? "Updating password..." : "Update password"}
             </button>
           </form>
         )}

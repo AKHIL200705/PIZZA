@@ -5,43 +5,65 @@ import { sendLowStockAlertEmail } from "./mailer.js";
 
 /**
  * Scheduled Inventory Low Stock Monitor using node-cron.
- * Oasis Infobyte Requirement #10: Low-Stock Email Notification via scheduled node-cron job.
+ * Oasis Infobyte Requirement #10: Low-Stock Email Notification with stateful de-duplication.
+ *
+ * Logic:
+ * 1. Stock becomes low (stock_qty <= low_stock_threshold) AND lowStockAlertSent !== true
+ * 2. Send email notification to ADMIN_EMAIL
+ * 3. Mark lowStockAlertSent = true (prevents duplicate spam emails on each cron run)
+ * 4. When stock is replenished above threshold, reset lowStockAlertSent = false
  */
+export const runLowStockAudit = async () => {
+  try {
+    // 1. Reset alert state for items that have been replenished above threshold
+    await Ingredient.updateMany(
+      {
+        $expr: { $gt: ["$stock_qty", "$low_stock_threshold"] },
+        lowStockAlertSent: true,
+      },
+      { $set: { lowStockAlertSent: false } }
+    );
+
+    // 2. Find low-stock items that have NOT had an alert sent yet
+    const itemsNeedingAlert = await Ingredient.find({
+      $expr: { $lte: ["$stock_qty", "$low_stock_threshold"] },
+      $or: [{ lowStockAlertSent: false }, { lowStockAlertSent: { $exists: false } }],
+    });
+
+    if (itemsNeedingAlert.length > 0) {
+      console.log(
+        `[node-cron] Found ${itemsNeedingAlert.length} low-stock item(s) needing alert. Sending email...`
+      );
+
+      const adminUser = await User.findOne({ role: "admin" });
+      const adminEmail =
+        process.env.ADMIN_EMAIL || (adminUser ? adminUser.email : "admin@pizzahub.com");
+
+      await sendLowStockAlertEmail(adminEmail, itemsNeedingAlert);
+
+      // Mark these items as alert sent
+      const itemIds = itemsNeedingAlert.map((item) => item._id);
+      await Ingredient.updateMany({ _id: { $in: itemIds } }, { $set: { lowStockAlertSent: true } });
+
+      console.log(`[node-cron] Low-stock alert sent for: ${itemsNeedingAlert.map((i) => i.name).join(", ")}`);
+    } else {
+      console.log("[node-cron] Inventory check complete: No new low-stock items need alerts.");
+    }
+  } catch (err) {
+    console.error("[node-cron] Low-stock audit error:", err.message);
+  }
+};
+
 export const initLowStockCron = () => {
-  // Run every 15 minutes (or adjust expression e.g. '0 * * * *' for hourly)
-  // In dev environment, runs check periodically to ensure low stock items are caught.
+  // Run scheduled inventory audit every 15 minutes
   cron.schedule("*/15 * * * *", async () => {
     console.log("[node-cron] Running scheduled low-stock inventory check...");
-    try {
-      // Find ingredients where stock_qty <= low_stock_threshold
-      const lowStockItems = await Ingredient.find({
-        $expr: { $lte: ["$stock_qty", "$low_stock_threshold"] },
-      });
-
-      if (lowStockItems.length > 0) {
-        console.log(`[node-cron] Found ${lowStockItems.length} low-stock items. Triggering admin email alert...`);
-        const adminUser = await User.findOne({ role: "admin" });
-        const adminEmail = adminUser ? adminUser.email : process.env.ADMIN_EMAIL || "admin@pizzahub.com";
-        await sendLowStockAlertEmail(adminEmail, lowStockItems);
-      } else {
-        console.log("[node-cron] All inventory stock levels are healthy.");
-      }
-    } catch (err) {
-      console.error("[node-cron] Low-stock audit error:", err.message);
-    }
+    await runLowStockAudit();
   });
 
   console.log("[node-cron] Scheduled inventory monitoring job initialized.");
 };
 
 export const triggerManualLowStockCheck = async () => {
-  const lowStockItems = await Ingredient.find({
-    $expr: { $lte: ["$stock_qty", "$low_stock_threshold"] },
-  });
-  if (lowStockItems.length > 0) {
-    const adminUser = await User.findOne({ role: "admin" });
-    const adminEmail = adminUser ? adminUser.email : process.env.ADMIN_EMAIL || "admin@pizzahub.com";
-    await sendLowStockAlertEmail(adminEmail, lowStockItems);
-  }
-  return lowStockItems;
+  return runLowStockAudit();
 };

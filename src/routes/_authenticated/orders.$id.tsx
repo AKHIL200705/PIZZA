@@ -20,6 +20,8 @@ import { pizzaImage } from "@/lib/images";
 import { StatusTracker } from "@/components/site/StatusTracker";
 import { btnGhost, btnPrimary, EmptyState, Skeleton } from "@/components/site/ui";
 
+import { io } from "socket.io-client";
+
 export const Route = createFileRoute("/_authenticated/orders/$id")({
   head: () => ({
     meta: [
@@ -36,17 +38,36 @@ export const Route = createFileRoute("/_authenticated/orders/$id")({
   component: TrackOrder,
 });
 
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
 function TrackOrder() {
   const { id } = Route.useParams();
   const { data, isLoading } = useOrder(id);
   const qc = useQueryClient();
 
   useEffect(() => {
-    // Polling interval to auto-update order status
+    // 1. Connect Socket.IO for instant real-time kitchen push updates
+    let socket: any = null;
+    try {
+      socket = io(API_BASE, { transports: ["websocket", "polling"] });
+      socket.emit("join_order", id);
+
+      socket.on("order:status_updated", (payload: any) => {
+        if (payload?.orderId === id || payload?.order?._id === id) {
+          qc.invalidateQueries({ queryKey: ["order", id] });
+          toast.info(`🔔 Live Kitchen Update: ${payload.status}`);
+        }
+      });
+    } catch {
+      // Socket fallback
+    }
+
+    // 2. Polling interval to auto-update order status as fallback
     const interval = setInterval(() => {
       qc.invalidateQueries({ queryKey: ["order", id] });
     }, 8000);
 
+    // 3. Supabase Realtime fallback
     const channel = supabase
       .channel(`order-${id}`)
       .on(
@@ -66,6 +87,10 @@ function TrackOrder() {
     return () => {
       clearInterval(interval);
       void supabase.removeChannel(channel);
+      if (socket) {
+        socket.emit("leave_order", id);
+        socket.disconnect();
+      }
     };
   }, [id, qc]);
 

@@ -25,6 +25,8 @@ export const Route = createFileRoute("/_authenticated/checkout")({
   component: Checkout,
 });
 
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
 /** Simulated & Official Razorpay test-mode payment sheet (no real money moves). */
 function PaymentSheet({
   amount,
@@ -33,12 +35,28 @@ function PaymentSheet({
 }: {
   amount: number;
   onCancel: () => void;
-  onPaid: (paymentId: string) => void;
+  onPaid: (paymentId: string, orderId?: string) => void;
 }) {
   const [processing, setProcessing] = useState(false);
 
-  const payWithRazorpay = () => {
+  const payWithRazorpay = async () => {
     setProcessing(true);
+
+    let backendOrderId = "";
+    try {
+      // 1. Create order on backend (Requirement #6)
+      const orderRes = await fetch(`${API_BASE}/api/payment/create-order`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount, currency: "INR" }),
+      });
+      if (orderRes.ok) {
+        const orderData = await orderRes.json();
+        backendOrderId = orderData.id;
+      }
+    } catch {
+      // fallback
+    }
 
     const loadScript = () => {
       return new Promise((resolve) => {
@@ -56,7 +74,7 @@ function PaymentSheet({
 
     void loadScript().then((loaded) => {
       const razorpayKey = (import.meta as any).env?.VITE_RAZORPAY_KEY_ID || "rzp_test_TaEOgKzOb6ODmx";
-      
+
       if (loaded && (window as any).Razorpay) {
         const options = {
           key: razorpayKey,
@@ -64,10 +82,30 @@ function PaymentSheet({
           currency: "INR",
           name: "PizzaHub Delivery",
           description: "Oasis Infobyte Test Mode Order Payment",
+          order_id: backendOrderId || undefined,
           image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=120&auto=format&fit=crop&q=80",
-          handler: function (response: { razorpay_payment_id: string }) {
+          handler: async function (response: {
+            razorpay_payment_id: string;
+            razorpay_order_id?: string;
+            razorpay_signature?: string;
+          }) {
+            // Verify payment on backend if signature exists
+            try {
+              if (response.razorpay_signature) {
+                await fetch(`${API_BASE}/api/payment/verify-payment`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(response),
+                });
+              }
+            } catch {
+              // ignore
+            }
             setProcessing(false);
-            onPaid(response.razorpay_payment_id || `pay_rzp_test_${Math.random().toString(36).slice(2, 10)}`);
+            onPaid(
+              response.razorpay_payment_id || `pay_rzp_test_${Math.random().toString(36).slice(2, 10)}`,
+              response.razorpay_order_id || backendOrderId
+            );
           },
           prefill: {
             name: "Customer",
@@ -93,19 +131,24 @@ function PaymentSheet({
             toast.error(resp.error?.description || "Payment failed in Razorpay");
           });
           rzp.open();
-        } catch (err: any) {
-          // Fallback if Razorpay initialization encounters issue
+        } catch {
           setTimeout(() => {
             setProcessing(false);
-            onPaid(`pay_rzp_test_${Math.random().toString(36).slice(2, 10)}`);
+            onPaid(
+              `pay_rzp_test_${Math.random().toString(36).slice(2, 10)}`,
+              backendOrderId
+            );
           }, 800);
         }
       } else {
         // Fallback test mode confirmation if network blocks Razorpay CDN
         setTimeout(() => {
           setProcessing(false);
-          onPaid(`pay_test_${Math.random().toString(36).slice(2, 12)}`);
-        }, 1200);
+          onPaid(
+            `pay_test_${Math.random().toString(36).slice(2, 12)}`,
+            backendOrderId
+          );
+        }, 1000);
       }
     });
   };
@@ -117,7 +160,7 @@ function PaymentSheet({
       aria-label="Test payment"
       className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur"
     >
-      <div className="glass-card w-full max-w-sm space-y-4 rounded-2xl p-6">
+      <div className="glass-card w-full max-w-sm space-y-4 rounded-2xl p-6 border border-border/80 shadow-2xl">
         <div className="flex items-center gap-2">
           <CreditCard className="h-5 w-5 text-primary" aria-hidden />
           <h2 className="font-display text-xl font-bold">Razorpay Test Mode Payment</h2>
@@ -128,9 +171,9 @@ function PaymentSheet({
         <div className="rounded-xl border border-border bg-secondary/40 p-3 text-xs text-muted-foreground">
           💳 Razorpay Gateway Test Mode · Card: 4111 1111 1111 1111 · CVV: 123
         </div>
-        <button onClick={payWithRazorpay} disabled={processing} className={`${btnPrimary} w-full py-3`}>
+        <button onClick={payWithRazorpay} disabled={processing} className={`${btnPrimary} w-full py-3 flex items-center justify-center gap-2`}>
           {processing && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
-          {processing ? "Opening Razorpay Gateway…" : `Pay ${inr(amount)} via Razorpay`}
+          {processing ? "Connecting to Gateway…" : `Pay ${inr(amount)} via Razorpay`}
         </button>
         <button onClick={onCancel} disabled={processing} className={`${btnGhost} w-full`}>
           Cancel
@@ -208,11 +251,11 @@ function Checkout() {
     setShowPayment(true);
   };
 
-  const placeOrder = async (paymentId: string) => {
+  const placeOrder = async (paymentId: string, orderId?: string) => {
     setPlacing(true);
 
     try {
-      const res = await fetch("http://localhost:5000/api/orders", {
+      const res = await fetch(`${API_BASE}/api/orders`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -221,6 +264,7 @@ function Checkout() {
           address: form.address,
           items,
           payment_id: paymentId,
+          razorpay_order_id: orderId || "",
           user_id: user?.id,
         }),
       });
@@ -233,7 +277,7 @@ function Checkout() {
       qc.invalidateQueries({ queryKey: ["ingredients"] });
       setPlacing(false);
       setShowPayment(false);
-      toast.success("Payment successful — your pizza is on its way!");
+      toast.success("Payment successful — your pizza is in the oven!");
       navigate({ to: "/orders/$id", params: { id: resData.orderId || resData.order?._id } });
       return;
     } catch (apiErr: any) {
@@ -242,7 +286,7 @@ function Checkout() {
         setShowPayment(false);
         if (apiErr.message?.includes("OUT_OF_STOCK")) {
           toast.error(
-            `Out of stock: ${apiErr.message.split("OUT_OF_STOCK:")[1]?.trim()} — please adjust your order.`,
+            `Out of stock: ${apiErr.message.split("OUT_OF_STOCK:")[1]?.trim()} — please adjust your order.`
           );
         } else {
           toast.error(apiErr.message || "Failed to place order");
