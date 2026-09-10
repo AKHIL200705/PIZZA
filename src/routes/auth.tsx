@@ -176,6 +176,26 @@ function AuthPage() {
 
   // Load and mount Google Identity Services
   useEffect(() => {
+    const renderGoogleBtn = () => {
+      if (!window.google?.accounts?.id || !googleBtnContainerRef.current) return;
+
+      const containerWidth = googleBtnContainerRef.current.clientWidth;
+      // Google GSI width constraint: must be between 200px and 400px
+      const calculatedWidth =
+        containerWidth > 0 ? Math.min(380, Math.max(200, Math.floor(containerWidth))) : 280;
+
+      googleBtnContainerRef.current.innerHTML = "";
+      window.google.accounts.id.renderButton(googleBtnContainerRef.current, {
+        theme: "outline",
+        size: "large",
+        width: calculatedWidth,
+        text: mode === "login" ? "signin_with" : "signup_with",
+        shape: "pill",
+        logo_alignment: "left",
+      });
+      setGsiLoaded(true);
+    };
+
     const initGsi = () => {
       if (window.google?.accounts?.id) {
         window.google.accounts.id.initialize({
@@ -184,39 +204,32 @@ function AuthPage() {
           auto_select: false,
         });
 
-        if (googleBtnContainerRef.current) {
-          googleBtnContainerRef.current.innerHTML = "";
-          window.google.accounts.id.renderButton(googleBtnContainerRef.current, {
-            theme: "outline",
-            size: "large",
-            width: 380,
-            text: mode === "login" ? "signin_with" : "signup_with",
-            shape: "rectangular",
-            logo_alignment: "left",
-          });
-          setGsiLoaded(true);
-        }
+        renderGoogleBtn();
       }
     };
 
     if (window.google?.accounts?.id) {
       initGsi();
-      return;
+    } else {
+      const script = document.createElement("script");
+      script.src = "https://accounts.google.com/gsi/client";
+      script.async = true;
+      script.defer = true;
+      script.onload = initGsi;
+      document.body.appendChild(script);
     }
 
-    const script = document.createElement("script");
-    script.src = "https://accounts.google.com/gsi/client";
-    script.async = true;
-    script.defer = true;
-    script.onload = initGsi;
-    document.body.appendChild(script);
+    let resizeTimer: ReturnType<typeof setTimeout>;
+    const handleResize = () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(renderGoogleBtn, 150);
+    };
+
+    window.addEventListener("resize", handleResize);
 
     return () => {
-      try {
-        document.body.removeChild(script);
-      } catch {
-        // ignore
-      }
+      window.removeEventListener("resize", handleResize);
+      clearTimeout(resizeTimer);
     };
   }, [mode]);
 
@@ -489,14 +502,17 @@ function AuthPage() {
         </div>
 
         {/* Google Official Identity Button & Container */}
-        <div className="flex flex-col items-center justify-center my-2 w-full min-h-[44px]">
-          <div ref={googleBtnContainerRef} className="w-full flex justify-center" />
+        <div className="flex flex-col items-center justify-center my-2 w-full max-w-full min-h-[44px]">
+          <div
+            ref={googleBtnContainerRef}
+            className="w-full max-w-full flex justify-center items-center overflow-hidden rounded-full [&>div]:!max-w-full [&>div>iframe]:!max-w-full"
+          />
           {!gsiLoaded && (
             <button
               type="button"
               onClick={handleGoogleClick}
               disabled={loading}
-              className="flex w-full items-center justify-center gap-3 rounded-xl border border-border/80 bg-background/80 hover:bg-muted/70 px-4 py-2.5 text-sm font-semibold text-foreground transition-all shadow-xs active:scale-[0.99]"
+              className="flex w-full items-center justify-center gap-3 rounded-full border border-border/80 bg-background/80 hover:bg-muted/70 px-4 py-2.5 text-sm font-semibold text-foreground transition-all shadow-xs active:scale-[0.99]"
             >
               <GoogleIcon className="h-5 w-5 shrink-0" />
               <span>{mode === "login" ? "Sign in with Google" : "Sign up with Google"}</span>
