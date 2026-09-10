@@ -61,30 +61,72 @@ function AuthPage() {
     setLoading(true);
     try {
       if (mode === "register") {
-        const { data, error } = await supabase.auth.signUp({
-          email: form.email,
-          password: form.password,
-          options: {
-            emailRedirectTo: window.location.origin,
-            data: { full_name: form.name },
-          },
-        });
-        if (error) throw error;
-        if (!data.session) {
+        try {
+          const res = await fetch("http://localhost:5000/api/auth/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: form.name,
+              email: form.email,
+              password: form.password,
+            }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.message || "Registration failed");
           setSent(true);
-          toast.success("Account created — check your email to verify it");
-        } else {
-          toast.success("Welcome to PizzaHub!");
-          navigate({ to: "/menu" });
+          toast.success("Account created successfully! Check email for verification link.");
+          return;
+        } catch (apiErr: any) {
+          // Fallback to Supabase if Express server not running
+          if (!apiErr.message?.includes("Failed to fetch")) {
+            throw apiErr;
+          }
+          const { data, error } = await supabase.auth.signUp({
+            email: form.email,
+            password: form.password,
+            options: {
+              emailRedirectTo: window.location.origin,
+              data: { full_name: form.name },
+            },
+          });
+          if (error) throw error;
+          if (!data.session) {
+            setSent(true);
+            toast.success("Account created — check your email to verify it");
+          } else {
+            toast.success("Welcome to PizzaHub!");
+            navigate({ to: "/menu" });
+          }
         }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email: form.email,
-          password: form.password,
-        });
-        if (error) throw error;
-        toast.success("Signed in");
-        navigate({ to: "/menu" });
+        try {
+          const res = await fetch("http://localhost:5000/api/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: form.email,
+              password: form.password,
+            }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.message || "Invalid credentials");
+          localStorage.setItem("pizzahub_token", data.token);
+          localStorage.setItem("pizzahub_user", JSON.stringify(data.user));
+          toast.success("Signed in successfully!");
+          window.location.href = "/menu";
+          return;
+        } catch (apiErr: any) {
+          if (!apiErr.message?.includes("Failed to fetch")) {
+            throw apiErr;
+          }
+          const { error } = await supabase.auth.signInWithPassword({
+            email: form.email,
+            password: form.password,
+          });
+          if (error) throw error;
+          toast.success("Signed in");
+          navigate({ to: "/menu" });
+        }
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : "Something went wrong";

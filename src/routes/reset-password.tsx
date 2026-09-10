@@ -27,7 +27,14 @@ function ResetPassword() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // A recovery link creates a temporary session; wait for it before allowing a change.
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("token")) {
+        setReady(true);
+        return;
+      }
+    }
+    // Supabase recovery link session check
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "PASSWORD_RECOVERY" || session) setReady(true);
     });
@@ -48,6 +55,29 @@ function ResetPassword() {
       return;
     }
     setLoading(true);
+
+    // 1. Check token in URL for Express backend
+    const token = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("token") : null;
+    if (token) {
+      try {
+        const res = await fetch("http://localhost:5000/api/auth/reset-password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token, newPassword: password }),
+        });
+        const data = await res.json();
+        setLoading(false);
+        if (!res.ok) throw new Error(data.message || "Failed to reset password");
+        toast.success("Password updated successfully! You can now sign in.");
+        navigate({ to: "/auth" });
+        return;
+      } catch (err: any) {
+        setLoading(false);
+        toast.error(err.message || "Password reset failed");
+        return;
+      }
+    }
+
     const { error } = await supabase.auth.updateUser({ password });
     setLoading(false);
     if (error) {

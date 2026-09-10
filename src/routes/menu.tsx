@@ -31,10 +31,6 @@ export function PizzaCard({ pizza }: { pizza: Pizza }) {
   const addToCart = useAddToCart(user?.id);
 
   const add = () => {
-    if (!user) {
-      toast.error("Please sign in to add pizzas to your cart");
-      return;
-    }
     addToCart.mutate(
       {
         name: pizza.name,

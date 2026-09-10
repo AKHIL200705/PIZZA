@@ -1,12 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { Printer } from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrder } from "@/lib/data";
 import { formatDate, inr } from "@/lib/format";
 import { pizzaImage } from "@/lib/images";
 import { StatusTracker } from "@/components/site/StatusTracker";
-import { btnPrimary, EmptyState, Skeleton } from "@/components/site/ui";
+import { btnGhost, btnPrimary, EmptyState, Skeleton } from "@/components/site/ui";
 
 export const Route = createFileRoute("/_authenticated/orders/$id")({
   head: () => ({
@@ -35,7 +37,14 @@ function TrackOrder() {
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "orders", filter: `id=eq.${id}` },
-        () => qc.invalidateQueries({ queryKey: ["order", id] }),
+        (payload) => {
+          qc.invalidateQueries({ queryKey: ["order", id] });
+          const newStatus = (payload.new as { status?: string })?.status;
+          if (newStatus) {
+            const formattedStatus = newStatus.replace("_", " ").toUpperCase();
+            toast.info(`🔔 Order Status Updated: ${formattedStatus}`);
+          }
+        },
       )
       .subscribe();
     return () => {
@@ -63,17 +72,32 @@ function TrackOrder() {
 
   const { order, items } = data;
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
-    <div className="mx-auto max-w-4xl px-4 py-14">
-      <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">
-        Order #{order.id.slice(0, 8).toUpperCase()}
-      </p>
-      <h1 className="font-display mt-2 text-3xl font-extrabold sm:text-4xl">
-        Tracking your pizza
-      </h1>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Placed {formatDate(order.created_at)} · Payment {order.payment_id || "—"}
-      </p>
+    <div className="mx-auto max-w-4xl px-4 py-14 print:py-4 print:px-0">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">
+            Order #{order.id.slice(0, 8).toUpperCase()}
+          </p>
+          <h1 className="font-display mt-2 text-3xl font-extrabold sm:text-4xl">
+            Tracking your pizza
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Placed {formatDate(order.created_at)} · Payment {order.payment_id || "—"}
+          </p>
+        </div>
+        <button
+          onClick={handlePrint}
+          className={`${btnGhost} print:hidden flex items-center gap-2 border border-border`}
+        >
+          <Printer className="h-4 w-4" aria-hidden />
+          <span>Print Receipt</span>
+        </button>
+      </div>
 
       <div className="glass-card mt-8 rounded-2xl p-6">
         <StatusTracker status={order.status} />

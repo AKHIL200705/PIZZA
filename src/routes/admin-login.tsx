@@ -33,25 +33,47 @@ function AdminLogin() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
+    try {
+      const res = await fetch("http://localhost:5000/api/auth/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Wrong email or password");
+      localStorage.setItem("pizzahub_token", data.token);
+      localStorage.setItem("pizzahub_user", JSON.stringify(data.user));
       setLoading(false);
-      toast.error("Wrong email or password");
+      toast.success("Welcome back, Kitchen Manager!");
+      window.location.href = "/admin";
       return;
-    }
-    const { data: roles } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", data.user.id);
-    setLoading(false);
-    if (!roles?.some((r) => r.role === "admin")) {
-      toast.error("This account does not have staff access");
+    } catch (apiErr: any) {
+      if (!apiErr.message?.includes("Failed to fetch")) {
+        setLoading(false);
+        toast.error(apiErr.message || "Invalid credentials");
+        return;
+      }
+      // Fallback if Express not running
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        setLoading(false);
+        toast.error("Wrong email or password");
+        return;
+      }
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", data.user.id);
+      setLoading(false);
+      if (!roles?.some((r) => r.role === "admin")) {
+        toast.error("This account does not have staff access");
+        await refresh();
+        return;
+      }
       await refresh();
-      return;
+      toast.success("Welcome back, chef");
+      navigate({ to: "/admin" });
     }
-    await refresh();
-    toast.success("Welcome back, chef");
-    navigate({ to: "/admin" });
   };
 
   const claimAdmin = async () => {

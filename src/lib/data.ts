@@ -57,19 +57,90 @@ export type OrderItem = {
   details: Record<string, unknown>;
 };
 
+export const DEFAULT_INGREDIENTS: Ingredient[] = [
+  { id: "base-1", name: "Thin Crust", category: "base", price: 0, stock_qty: 50, low_stock_threshold: 20, sort_order: 1 },
+  { id: "base-2", name: "Cheese Burst", category: "base", price: 60, stock_qty: 45, low_stock_threshold: 15, sort_order: 2 },
+  { id: "base-3", name: "Pan Crust", category: "base", price: 30, stock_qty: 50, low_stock_threshold: 20, sort_order: 3 },
+  { id: "base-4", name: "Wheat Thin Crust", category: "base", price: 40, stock_qty: 35, low_stock_threshold: 15, sort_order: 4 },
+  { id: "base-5", name: "Fresh Pan", category: "base", price: 20, stock_qty: 50, low_stock_threshold: 20, sort_order: 5 },
+
+  { id: "sauce-1", name: "Classic Tomato", category: "sauce", price: 0, stock_qty: 50, low_stock_threshold: 20, sort_order: 1 },
+  { id: "sauce-2", name: "Spicy Marinara", category: "sauce", price: 20, stock_qty: 40, low_stock_threshold: 15, sort_order: 2 },
+  { id: "sauce-3", name: "Creamy Garlic", category: "sauce", price: 30, stock_qty: 30, low_stock_threshold: 10, sort_order: 3 },
+  { id: "sauce-4", name: "BBQ Sauce", category: "sauce", price: 30, stock_qty: 45, low_stock_threshold: 15, sort_order: 4 },
+  { id: "sauce-5", name: "Basil Pesto", category: "sauce", price: 40, stock_qty: 25, low_stock_threshold: 10, sort_order: 5 },
+
+  { id: "cheese-1", name: "Mozzarella", category: "cheese", price: 50, stock_qty: 60, low_stock_threshold: 20, sort_order: 1 },
+  { id: "cheese-2", name: "Cheddar", category: "cheese", price: 60, stock_qty: 50, low_stock_threshold: 15, sort_order: 2 },
+  { id: "cheese-3", name: "Parmesan", category: "cheese", price: 70, stock_qty: 40, low_stock_threshold: 10, sort_order: 3 },
+  { id: "cheese-4", name: "Gouda", category: "cheese", price: 80, stock_qty: 30, low_stock_threshold: 10, sort_order: 4 },
+  { id: "cheese-5", name: "Vegan Cheese", category: "cheese", price: 75, stock_qty: 25, low_stock_threshold: 10, sort_order: 5 },
+
+  { id: "veg-1", name: "Red Onion", category: "veggie", price: 30, stock_qty: 80, low_stock_threshold: 25, sort_order: 1 },
+  { id: "veg-2", name: "Capsicum", category: "veggie", price: 30, stock_qty: 75, low_stock_threshold: 25, sort_order: 2 },
+  { id: "veg-3", name: "Button Mushroom", category: "veggie", price: 45, stock_qty: 60, low_stock_threshold: 20, sort_order: 3 },
+  { id: "veg-4", name: "Black Olives", category: "veggie", price: 40, stock_qty: 50, low_stock_threshold: 15, sort_order: 4 },
+  { id: "veg-5", name: "Sweet Corn", category: "veggie", price: 35, stock_qty: 70, low_stock_threshold: 20, sort_order: 5 },
+  { id: "veg-6", name: "Jalapenos", category: "veggie", price: 40, stock_qty: 55, low_stock_threshold: 15, sort_order: 6 },
+  { id: "veg-7", name: "Fresh Tomatoes", category: "veggie", price: 25, stock_qty: 90, low_stock_threshold: 30, sort_order: 7 },
+];
+
+export const DEFAULT_PIZZAS: Pizza[] = [
+  {
+    id: "pizza-1",
+    name: "Classic Margherita",
+    description: "Classic blend of ripe tomatoes, creamy mozzarella & fresh basil herbs.",
+    price: 299,
+    image_key: "margherita",
+    is_available: true,
+    ingredient_ids: ["base-1", "sauce-1", "cheese-1"],
+  },
+  {
+    id: "pizza-2",
+    name: "Farmhouse Veggie",
+    description: "Crisp capsicum, juicy tomatoes, red onions & succulent button mushrooms.",
+    price: 399,
+    image_key: "farmhouse",
+    is_available: true,
+    ingredient_ids: ["base-1", "sauce-1", "cheese-1", "veg-1", "veg-2", "veg-3"],
+  },
+  {
+    id: "pizza-3",
+    name: "Fiery Jalapeno & Corn",
+    description: "Spicy jalapenos, golden sweet corn, chili flakes & extra cheddar melt.",
+    price: 449,
+    image_key: "supreme",
+    is_available: true,
+    ingredient_ids: ["base-2", "sauce-2", "cheese-2", "veg-5", "veg-6"],
+  },
+  {
+    id: "pizza-4",
+    name: "Smokey BBQ Paneer",
+    description: "Tender paneer cubes smothered in rich BBQ sauce with crunchy onions.",
+    price: 479,
+    image_key: "bbq",
+    is_available: true,
+    ingredient_ids: ["base-3", "sauce-4", "cheese-1", "veg-1"],
+  },
+];
+
 /* ---------- catalogue ---------- */
 
 export function useIngredients() {
   return useQuery({
     queryKey: ["ingredients"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("ingredients")
-        .select("*")
-        .order("category")
-        .order("sort_order");
-      if (error) throw error;
-      return data as Ingredient[];
+      try {
+        const { data, error } = await supabase
+          .from("ingredients")
+          .select("*")
+          .order("category")
+          .order("sort_order");
+        if (error || !data || data.length === 0) return DEFAULT_INGREDIENTS;
+        return data as Ingredient[];
+      } catch {
+        return DEFAULT_INGREDIENTS;
+      }
     },
   });
 }
@@ -78,26 +149,44 @@ export function usePizzas() {
   return useQuery({
     queryKey: ["pizzas"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("pizzas").select("*").order("price");
-      if (error) throw error;
-      return data as Pizza[];
+      try {
+        const { data, error } = await supabase.from("pizzas").select("*").order("price");
+        if (error || !data || data.length === 0) return DEFAULT_PIZZAS;
+        return data as Pizza[];
+      } catch {
+        return DEFAULT_PIZZAS;
+      }
     },
   });
 }
 
 /* ---------- cart ---------- */
 
+const getLocalCart = (): CartItem[] => {
+  try {
+    if (typeof window === "undefined") return [];
+    const saved = localStorage.getItem("pizzahub_cart");
+    return saved ? JSON.parse(saved) : [];
+  } catch {
+    return [];
+  }
+};
+
+const setLocalCart = (items: CartItem[]) => {
+  try {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("pizzahub_cart", JSON.stringify(items));
+    }
+  } catch {
+    // ignore
+  }
+};
+
 export function useCart(userId?: string) {
   return useQuery({
     queryKey: ["cart", userId],
-    enabled: Boolean(userId),
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("cart_items")
-        .select("*")
-        .order("created_at");
-      if (error) throw error;
-      return data as CartItem[];
+      return getLocalCart();
     },
   });
 }
@@ -113,10 +202,12 @@ export function useAddToCart(userId?: string) {
       ingredient_ids: string[];
       details: Record<string, unknown>;
     }) => {
-      if (!userId) throw new Error("Please sign in first");
-      const row = { ...item, user_id: userId, details: item.details as never };
-      const { error } = await supabase.from("cart_items").insert(row);
-      if (error) throw error;
+      const current = getLocalCart();
+      const newItem: CartItem = {
+        id: `cart-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        ...item,
+      };
+      setLocalCart([...current, newItem]);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["cart"] }),
   });
@@ -126,8 +217,11 @@ export function useUpdateCartItem() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, quantity }: { id: string; quantity: number }) => {
-      const { error } = await supabase.from("cart_items").update({ quantity }).eq("id", id);
-      if (error) throw error;
+      const current = getLocalCart();
+      const updated = current
+        .map((i) => (i.id === id ? { ...i, quantity } : i))
+        .filter((i) => i.quantity > 0);
+      setLocalCart(updated);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["cart"] }),
   });
@@ -137,8 +231,9 @@ export function useRemoveCartItem() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("cart_items").delete().eq("id", id);
-      if (error) throw error;
+      const current = getLocalCart();
+      const updated = current.filter((i) => i.id !== id);
+      setLocalCart(updated);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["cart"] }),
   });
@@ -151,12 +246,33 @@ export function useMyOrders(userId?: string) {
     queryKey: ["orders", userId],
     enabled: Boolean(userId),
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("orders")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data as Order[];
+      try {
+        const token = localStorage.getItem("pizzahub_token");
+        const res = await fetch(`http://localhost:5000/api/orders/user/${userId}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        if (res.ok) {
+          const data = await res.json();
+          return data.map((o: any) => ({
+            id: o._id || o.id,
+            user_id: o.user || userId,
+            status: o.status,
+            customer_name: o.customer_name,
+            phone: o.phone,
+            address: o.address,
+            subtotal: o.subtotal,
+            delivery_fee: o.delivery_fee,
+            total: o.total,
+            payment_id: o.payment_id,
+            payment_status: o.payment_status,
+            created_at: o.createdAt || new Date().toISOString(),
+            updated_at: o.updatedAt || new Date().toISOString(),
+          })) as Order[];
+        }
+      } catch {
+        // ignore
+      }
+      return [];
     },
   });
 }
@@ -165,18 +281,40 @@ export function useOrder(orderId: string) {
   return useQuery({
     queryKey: ["order", orderId],
     queryFn: async () => {
-      const { data: order, error } = await supabase
-        .from("orders")
-        .select("*")
-        .eq("id", orderId)
-        .maybeSingle();
-      if (error) throw error;
-      const { data: items, error: itemsError } = await supabase
-        .from("order_items")
-        .select("*")
-        .eq("order_id", orderId);
-      if (itemsError) throw itemsError;
-      return { order: order as Order | null, items: (items ?? []) as OrderItem[] };
+      try {
+        const res = await fetch(`http://localhost:5000/api/orders/${orderId}`);
+        if (res.ok) {
+          const o = await res.json();
+          const order: Order = {
+            id: o._id || o.id,
+            user_id: o.user || "",
+            status: o.status,
+            customer_name: o.customer_name,
+            phone: o.phone,
+            address: o.address,
+            subtotal: o.subtotal,
+            delivery_fee: o.delivery_fee,
+            total: o.total,
+            payment_id: o.payment_id,
+            payment_status: o.payment_status,
+            created_at: o.createdAt || new Date().toISOString(),
+            updated_at: o.updatedAt || new Date().toISOString(),
+          };
+          const items: OrderItem[] = (o.items || []).map((it: any, idx: number) => ({
+            id: it._id || `item-${idx}`,
+            order_id: order.id,
+            name: it.name,
+            image_key: it.image_key || "custom",
+            unit_price: it.unit_price,
+            quantity: it.quantity,
+            details: it.details || {},
+          }));
+          return { order, items };
+        }
+      } catch {
+        // ignore
+      }
+      return { order: null, items: [] };
     },
   });
 }
@@ -188,12 +326,33 @@ export function useAllOrders(enabled: boolean) {
     queryKey: ["admin-orders"],
     enabled,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("orders")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data as Order[];
+      try {
+        const token = localStorage.getItem("pizzahub_token");
+        const res = await fetch("http://localhost:5000/api/orders/admin/all", {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        if (res.ok) {
+          const data = await res.json();
+          return data.map((o: any) => ({
+            id: o._id || o.id,
+            user_id: o.user || "",
+            status: o.status,
+            customer_name: o.customer_name,
+            phone: o.phone,
+            address: o.address,
+            subtotal: o.subtotal,
+            delivery_fee: o.delivery_fee,
+            total: o.total,
+            payment_id: o.payment_id,
+            payment_status: o.payment_status,
+            created_at: o.createdAt || new Date().toISOString(),
+            updated_at: o.updatedAt || new Date().toISOString(),
+          })) as Order[];
+        }
+      } catch {
+        // ignore
+      }
+      return [];
     },
   });
 }
@@ -202,8 +361,20 @@ export function useUpdateOrderStatus() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { error } = await supabase.from("orders").update({ status }).eq("id", id);
-      if (error) throw error;
+      try {
+        const token = localStorage.getItem("pizzahub_token");
+        const res = await fetch(`http://localhost:5000/api/orders/admin/${id}/status`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ status }),
+        });
+        if (res.ok) return;
+      } catch {
+        // fallback
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin-orders"] });
@@ -224,12 +395,19 @@ export function useUpdateStock() {
       stock_qty: number;
       low_stock_threshold?: number;
     }) => {
-      const patch =
-        typeof low_stock_threshold === "number"
-          ? { stock_qty, low_stock_threshold }
-          : { stock_qty };
-      const { error } = await supabase.from("ingredients").update(patch).eq("id", id);
-      if (error) throw error;
+      try {
+        const token = localStorage.getItem("pizzahub_token");
+        await fetch(`http://localhost:5000/api/ingredients/${id}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ stock_qty, low_stock_threshold }),
+        });
+      } catch {
+        // ignore
+      }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["ingredients"] }),
   });

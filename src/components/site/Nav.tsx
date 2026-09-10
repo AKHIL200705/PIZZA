@@ -10,7 +10,7 @@ const linkClass =
   "text-sm font-medium text-muted-foreground transition-colors hover:text-foreground";
 
 export function Nav() {
-  const { user, isAdmin, profile } = useAuth();
+  const { user, isAdmin, profile, signOut: authSignOut } = useAuth();
   const { data: cart } = useCart(user?.id);
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
@@ -21,7 +21,7 @@ export function Nav() {
   const signOut = async () => {
     await qc.cancelQueries();
     qc.clear();
-    await supabase.auth.signOut();
+    await authSignOut();
     navigate({ to: "/auth", replace: true });
   };
 

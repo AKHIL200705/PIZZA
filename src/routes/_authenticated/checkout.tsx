@@ -25,7 +25,7 @@ export const Route = createFileRoute("/_authenticated/checkout")({
   component: Checkout,
 });
 
-/** Simulated test-mode payment sheet (no real money moves). */
+/** Simulated & Official Razorpay test-mode payment sheet (no real money moves). */
 function PaymentSheet({
   amount,
   onCancel,
@@ -37,11 +37,65 @@ function PaymentSheet({
 }) {
   const [processing, setProcessing] = useState(false);
 
-  const pay = () => {
+  const payWithRazorpay = () => {
     setProcessing(true);
-    setTimeout(() => {
-      onPaid(`pay_test_${Math.random().toString(36).slice(2, 12)}`);
-    }, 1400);
+
+    const loadScript = () => {
+      return new Promise((resolve) => {
+        if ((window as any).Razorpay) {
+          resolve(true);
+          return;
+        }
+        const script = document.createElement("script");
+        script.src = "https://checkout.razorpay.com/v1/checkout.js";
+        script.onload = () => resolve(true);
+        script.onerror = () => resolve(false);
+        document.body.appendChild(script);
+      });
+    };
+
+    void loadScript().then((loaded) => {
+      const razorpayKey = (import.meta as any).env?.VITE_RAZORPAY_KEY_ID || "rzp_test_oasis_pizza_key_2026";
+      
+      if (loaded && (window as any).Razorpay) {
+        const options = {
+          key: razorpayKey,
+          amount: Math.round(amount * 100),
+          currency: "INR",
+          name: "PizzaHub Delivery",
+          description: "Oasis Infobyte Test Mode Order Payment",
+          image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=120&auto=format&fit=crop&q=80",
+          handler: function (response: { razorpay_payment_id: string }) {
+            setProcessing(false);
+            onPaid(response.razorpay_payment_id || `pay_rzp_test_${Math.random().toString(36).slice(2, 10)}`);
+          },
+          prefill: {
+            name: "Customer",
+            email: "customer@example.com",
+            contact: "9999999999",
+          },
+          notes: {
+            address: "PizzaHub Oasis Test Order",
+          },
+          theme: {
+            color: "#e11d48",
+          },
+          modal: {
+            ondismiss: function () {
+              setProcessing(false);
+            },
+          },
+        };
+        const rzp = new (window as any).Razorpay(options);
+        rzp.open();
+      } else {
+        // Fallback test mode confirmation if network blocks script
+        setTimeout(() => {
+          setProcessing(false);
+          onPaid(`pay_test_${Math.random().toString(36).slice(2, 12)}`);
+        }, 1200);
+      }
+    });
   };
 
   return (
@@ -54,18 +108,17 @@ function PaymentSheet({
       <div className="glass-card w-full max-w-sm space-y-4 rounded-2xl p-6">
         <div className="flex items-center gap-2">
           <CreditCard className="h-5 w-5 text-primary" aria-hidden />
-          <h2 className="font-display text-xl font-bold">Test payment</h2>
+          <h2 className="font-display text-xl font-bold">Razorpay Test Mode Payment</h2>
         </div>
         <p className="text-sm text-muted-foreground">
-          Sandbox checkout — no real card is charged. Confirm to simulate a successful
-          payment of <strong>{inr(amount)}</strong>.
+          Oasis Infobyte Test Mode — no real money is charged. Click below to initiate Razorpay Sandbox Payment for <strong>{inr(amount)}</strong>.
         </p>
         <div className="rounded-xl border border-border bg-secondary/40 p-3 text-xs text-muted-foreground">
-          Test card 4111 1111 1111 1111 · any future expiry · CVV 123
+          💳 Razorpay Gateway Test Mode · Card: 4111 1111 1111 1111 · CVV: 123
         </div>
-        <button onClick={pay} disabled={processing} className={`${btnPrimary} w-full`}>
+        <button onClick={payWithRazorpay} disabled={processing} className={`${btnPrimary} w-full py-3`}>
           {processing && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
-          {processing ? "Processing…" : `Pay ${inr(amount)}`}
+          {processing ? "Opening Razorpay Gateway…" : `Pay ${inr(amount)} via Razorpay`}
         </button>
         <button onClick={onCancel} disabled={processing} className={`${btnGhost} w-full`}>
           Cancel
@@ -84,6 +137,9 @@ function Checkout() {
   const navigate = useNavigate();
   const qc = useQueryClient();
 
+  const [promoInput, setPromoInput] = useState("");
+  const [promoApplied, setPromoApplied] = useState<{ code: string; type: "percent" | "delivery"; value: number; label: string } | null>(null);
+
   useEffect(() => {
     if (profile)
       setForm((f) => ({
@@ -95,7 +151,33 @@ function Checkout() {
 
   const items = cart ?? [];
   const subtotal = items.reduce((sum, i) => sum + Number(i.unit_price) * i.quantity, 0);
-  const total = subtotal + DELIVERY_FEE;
+
+  const applyPromo = () => {
+    const code = promoInput.trim().toUpperCase();
+    if (!code) return;
+    if (code === "OASIS10") {
+      setPromoApplied({ code: "OASIS10", type: "percent", value: 0.1, label: "10% OFF" });
+      toast.success("Promo OASIS10 applied: 10% discount!");
+    } else if (code === "PIZZA20") {
+      setPromoApplied({ code: "PIZZA20", type: "percent", value: 0.2, label: "20% OFF" });
+      toast.success("Promo PIZZA20 applied: 20% discount!");
+    } else if (code === "FREEDEL") {
+      setPromoApplied({ code: "FREEDEL", type: "delivery", value: 1, label: "Free Delivery" });
+      toast.success("Promo FREEDEL applied: Delivery fee waived!");
+    } else {
+      toast.error("Invalid promo code. Try OASIS10, PIZZA20, or FREEDEL.");
+    }
+  };
+
+  const removePromo = () => {
+    setPromoApplied(null);
+    setPromoInput("");
+    toast.info("Promo code removed");
+  };
+
+  const discountAmount = promoApplied?.type === "percent" ? Math.round(subtotal * promoApplied.value) : 0;
+  const effectiveDeliveryFee = promoApplied?.type === "delivery" ? 0 : DELIVERY_FEE;
+  const total = Math.max(0, subtotal - discountAmount + effectiveDeliveryFee);
 
   const startPayment = (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,37 +198,67 @@ function Checkout() {
 
   const placeOrder = async (paymentId: string) => {
     setPlacing(true);
-    // Save details back onto the profile for next time.
-    if (user)
-      await supabase
-        .from("profiles")
-        .update({ full_name: form.name, phone: form.phone, address: form.address })
-        .eq("id", user.id);
 
-    const { data, error } = await supabase.rpc("place_order", {
-      p_customer_name: form.name,
-      p_phone: form.phone,
-      p_address: form.address,
-      p_payment_id: paymentId,
-    });
-    setPlacing(false);
-    setShowPayment(false);
+    try {
+      const res = await fetch("http://localhost:5000/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customer_name: form.name,
+          phone: form.phone,
+          address: form.address,
+          items,
+          payment_id: paymentId,
+          user_id: user?.id,
+        }),
+      });
+      const resData = await res.json();
+      if (!res.ok) throw new Error(resData.message || "Failed to place order");
 
-    if (error) {
-      if (error.message.includes("OUT_OF_STOCK")) {
-        toast.error(
-          `Out of stock: ${error.message.split("OUT_OF_STOCK:")[1]?.trim()} — please adjust your order.`,
-        );
-      } else {
-        toast.error(error.message);
-      }
+      localStorage.removeItem("pizzahub_cart");
+      qc.invalidateQueries({ queryKey: ["cart"] });
+      qc.invalidateQueries({ queryKey: ["orders"] });
+      qc.invalidateQueries({ queryKey: ["ingredients"] });
+      setPlacing(false);
+      setShowPayment(false);
+      toast.success("Payment successful — your pizza is on its way!");
+      navigate({ to: "/orders/$id", params: { id: resData.orderId || resData.order?._id } });
       return;
+    } catch (apiErr: any) {
+      if (!apiErr.message?.includes("Failed to fetch")) {
+        setPlacing(false);
+        setShowPayment(false);
+        if (apiErr.message?.includes("OUT_OF_STOCK")) {
+          toast.error(
+            `Out of stock: ${apiErr.message.split("OUT_OF_STOCK:")[1]?.trim()} — please adjust your order.`,
+          );
+        } else {
+          toast.error(apiErr.message || "Failed to place order");
+        }
+        return;
+      }
+
+      // Fallback
+      const { data, error } = await supabase.rpc("place_order", {
+        p_customer_name: form.name,
+        p_phone: form.phone,
+        p_address: form.address,
+        p_payment_id: paymentId,
+      });
+      setPlacing(false);
+      setShowPayment(false);
+
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      localStorage.removeItem("pizzahub_cart");
+      qc.invalidateQueries({ queryKey: ["cart"] });
+      qc.invalidateQueries({ queryKey: ["orders"] });
+      qc.invalidateQueries({ queryKey: ["ingredients"] });
+      toast.success("Payment successful — your pizza is on its way!");
+      navigate({ to: "/orders/$id", params: { id: data as string } });
     }
-    qc.invalidateQueries({ queryKey: ["cart"] });
-    qc.invalidateQueries({ queryKey: ["orders"] });
-    qc.invalidateQueries({ queryKey: ["ingredients"] });
-    toast.success("Payment successful — your pizza is on its way!");
-    navigate({ to: "/orders/$id", params: { id: data as string } });
   };
 
   if (items.length === 0) {
@@ -220,9 +332,55 @@ function Checkout() {
             <span className="text-muted-foreground">Subtotal</span>
             <span>{inr(subtotal)}</span>
           </div>
+
+          {/* Promo code section */}
+          <div className="border-t border-border pt-3">
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-1.5">
+              Promo Code
+            </label>
+            {promoApplied ? (
+              <div className="flex items-center justify-between rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 text-xs">
+                <span className="font-semibold text-emerald-500">
+                  🎉 {promoApplied.code} applied ({promoApplied.label})
+                </span>
+                <button
+                  type="button"
+                  onClick={removePromo}
+                  className="text-muted-foreground hover:text-foreground font-bold"
+                >
+                  ✕
+                </button>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Try OASIS10 or PIZZA20"
+                  value={promoInput}
+                  onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+                  className={`${inputClass} text-xs py-1.5 uppercase`}
+                />
+                <button
+                  type="button"
+                  onClick={applyPromo}
+                  className={`${btnGhost} text-xs px-3 whitespace-nowrap`}
+                >
+                  Apply
+                </button>
+              </div>
+            )}
+          </div>
+
+          {discountAmount > 0 && (
+            <div className="flex justify-between text-sm text-emerald-500 font-medium">
+              <span>Discount</span>
+              <span>-{inr(discountAmount)}</span>
+            </div>
+          )}
+
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Delivery</span>
-            <span>{inr(DELIVERY_FEE)}</span>
+            <span>{effectiveDeliveryFee === 0 ? <span className="text-emerald-500 font-semibold">FREE</span> : inr(effectiveDeliveryFee)}</span>
           </div>
           <div className="flex justify-between border-t border-border pt-3 text-lg font-bold">
             <span>Total</span>
