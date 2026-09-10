@@ -34,9 +34,7 @@ export function AdminShell({ title, children }: { title: string; children: React
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12">
-      <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">
-        Kitchen console
-      </p>
+      <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Kitchen console</p>
       <h1 className="font-display mt-2 text-3xl font-extrabold sm:text-4xl">{title}</h1>
 
       <nav className="mt-6 flex flex-wrap gap-2">

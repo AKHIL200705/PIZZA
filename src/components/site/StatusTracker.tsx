@@ -51,9 +51,7 @@ export function StatusTracker({ status }: { status: string }) {
                   <StepIcon className="h-5 w-5" aria-hidden />
                 </span>
 
-                <h4 className="font-display mt-3 text-sm font-bold text-foreground">
-                  {step}
-                </h4>
+                <h4 className="font-display mt-3 text-sm font-bold text-foreground">{step}</h4>
               </div>
 
               <div className="mt-3 flex items-center gap-1 text-[11px] font-semibold">

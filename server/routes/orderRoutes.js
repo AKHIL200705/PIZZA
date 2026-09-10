@@ -1,5 +1,6 @@
 import express from "express";
 import mongoose from "mongoose";
+import crypto from "crypto";
 import { Order } from "../models/Order.js";
 import { Ingredient } from "../models/Ingredient.js";
 import { protect, adminOnly } from "../middleware/auth.js";
@@ -73,6 +74,7 @@ router.post("/", async (req, res) => {
       items,
       payment_id,
       razorpay_order_id,
+      razorpay_signature,
       user_id,
     } = req.body;
 
@@ -96,6 +98,24 @@ router.post("/", async (req, res) => {
     if (!payment_id) {
       if (session && useTransactions) await session.abortTransaction();
       return res.status(400).json({ message: "Verified payment ID is required" });
+    }
+
+    // Cryptographic Razorpay Signature Verification (Payment Security)
+    if (razorpay_signature && process.env.RAZORPAY_KEY_SECRET) {
+      const hmac = crypto.createHmac("sha256", process.env.RAZORPAY_KEY_SECRET);
+      hmac.update(`${razorpay_order_id}|${payment_id}`);
+      const expectedSignature = hmac.digest("hex");
+      if (expectedSignature !== razorpay_signature) {
+        if (session && useTransactions) await session.abortTransaction();
+        return res.status(400).json({
+          message: "Cryptographic payment signature mismatch. Order not confirmed.",
+        });
+      }
+    } else if (process.env.NODE_ENV === "production" && !razorpay_signature) {
+      if (session && useTransactions) await session.abortTransaction();
+      return res.status(400).json({
+        message: "Payment verification signature required in production.",
+      });
     }
 
     // Tally total required quantity for each ingredient across all ordered pizzas
@@ -164,12 +184,12 @@ router.post("/", async (req, res) => {
         ? Ingredient.findOneAndUpdate(
             { _id: ingDoc._id, stock_qty: { $gte: requiredQty } },
             { $inc: { stock_qty: -requiredQty } },
-            { new: true, session }
+            { returnDocument: "after", session },
           )
         : Ingredient.findOneAndUpdate(
             { _id: ingDoc._id, stock_qty: { $gte: requiredQty } },
             { $inc: { stock_qty: -requiredQty } },
-            { new: true }
+            { returnDocument: "after" },
           ));
 
       if (!updated) {
@@ -185,7 +205,7 @@ router.post("/", async (req, res) => {
 
     const subtotal = items.reduce(
       (sum, i) => sum + Number(i.unit_price || 0) * (Number(i.quantity) || 1),
-      0
+      0,
     );
     const delivery_fee = 49;
     const total = subtotal + delivery_fee;
@@ -217,7 +237,7 @@ router.post("/", async (req, res) => {
 
     // Trigger scheduled low stock alert check in background if any ingredient crossed threshold
     triggerManualLowStockCheck().catch((err) =>
-      console.error("[Inventory] Low stock check error:", err.message)
+      console.error("[Inventory] Low stock check error:", err.message),
     );
 
     // Emit Socket.IO notification to kitchen/admin

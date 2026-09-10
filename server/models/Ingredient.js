@@ -14,7 +14,7 @@ const ingredientSchema = new mongoose.Schema(
     lowStockAlertSent: { type: Boolean, default: false },
     sort_order: { type: Number, default: 0 },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export const Ingredient = mongoose.model("Ingredient", ingredientSchema);

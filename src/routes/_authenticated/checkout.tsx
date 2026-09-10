@@ -35,7 +35,7 @@ function PaymentSheet({
 }: {
   amount: number;
   onCancel: () => void;
-  onPaid: (paymentId: string, orderId?: string) => void;
+  onPaid: (paymentId: string, orderId?: string, signature?: string) => void;
 }) {
   const [processing, setProcessing] = useState(false);
 
@@ -73,7 +73,8 @@ function PaymentSheet({
     };
 
     void loadScript().then((loaded) => {
-      const razorpayKey = (import.meta as any).env?.VITE_RAZORPAY_KEY_ID || "rzp_test_TaEOgKzOb6ODmx";
+      const razorpayKey =
+        (import.meta as any).env?.VITE_RAZORPAY_KEY_ID || "rzp_test_TaEOgKzOb6ODmx";
 
       if (loaded && (window as any).Razorpay) {
         const options = {
@@ -83,7 +84,8 @@ function PaymentSheet({
           name: "PizzaHub Delivery",
           description: "Oasis Infobyte Test Mode Order Payment",
           order_id: backendOrderId || undefined,
-          image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=120&auto=format&fit=crop&q=80",
+          image:
+            "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=120&auto=format&fit=crop&q=80",
           handler: async function (response: {
             razorpay_payment_id: string;
             razorpay_order_id?: string;
@@ -103,8 +105,10 @@ function PaymentSheet({
             }
             setProcessing(false);
             onPaid(
-              response.razorpay_payment_id || `pay_rzp_test_${Math.random().toString(36).slice(2, 10)}`,
-              response.razorpay_order_id || backendOrderId
+              response.razorpay_payment_id ||
+                `pay_rzp_test_${Math.random().toString(36).slice(2, 10)}`,
+              response.razorpay_order_id || backendOrderId,
+              response.razorpay_signature,
             );
           },
           prefill: {
@@ -134,20 +138,14 @@ function PaymentSheet({
         } catch {
           setTimeout(() => {
             setProcessing(false);
-            onPaid(
-              `pay_rzp_test_${Math.random().toString(36).slice(2, 10)}`,
-              backendOrderId
-            );
+            onPaid(`pay_rzp_test_${Math.random().toString(36).slice(2, 10)}`, backendOrderId);
           }, 800);
         }
       } else {
         // Fallback test mode confirmation if network blocks Razorpay CDN
         setTimeout(() => {
           setProcessing(false);
-          onPaid(
-            `pay_test_${Math.random().toString(36).slice(2, 12)}`,
-            backendOrderId
-          );
+          onPaid(`pay_test_${Math.random().toString(36).slice(2, 12)}`, backendOrderId);
         }, 1000);
       }
     });
@@ -166,12 +164,17 @@ function PaymentSheet({
           <h2 className="font-display text-xl font-bold">Razorpay Test Mode Payment</h2>
         </div>
         <p className="text-sm text-muted-foreground">
-          Oasis Infobyte Test Mode — no real money is charged. Click below to initiate Razorpay Sandbox Payment for <strong>{inr(amount)}</strong>.
+          Oasis Infobyte Test Mode — no real money is charged. Click below to initiate Razorpay
+          Sandbox Payment for <strong>{inr(amount)}</strong>.
         </p>
         <div className="rounded-xl border border-border bg-secondary/40 p-3 text-xs text-muted-foreground">
           💳 Razorpay Gateway Test Mode · Card: 4111 1111 1111 1111 · CVV: 123
         </div>
-        <button onClick={payWithRazorpay} disabled={processing} className={`${btnPrimary} w-full py-3 flex items-center justify-center gap-2`}>
+        <button
+          onClick={payWithRazorpay}
+          disabled={processing}
+          className={`${btnPrimary} w-full py-3 flex items-center justify-center gap-2`}
+        >
           {processing && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
           {processing ? "Connecting to Gateway…" : `Pay ${inr(amount)} via Razorpay`}
         </button>
@@ -193,7 +196,12 @@ function Checkout() {
   const qc = useQueryClient();
 
   const [promoInput, setPromoInput] = useState("");
-  const [promoApplied, setPromoApplied] = useState<{ code: string; type: "percent" | "delivery"; value: number; label: string } | null>(null);
+  const [promoApplied, setPromoApplied] = useState<{
+    code: string;
+    type: "percent" | "delivery";
+    value: number;
+    label: string;
+  } | null>(null);
 
   useEffect(() => {
     if (profile)
@@ -230,7 +238,8 @@ function Checkout() {
     toast.info("Promo code removed");
   };
 
-  const discountAmount = promoApplied?.type === "percent" ? Math.round(subtotal * promoApplied.value) : 0;
+  const discountAmount =
+    promoApplied?.type === "percent" ? Math.round(subtotal * promoApplied.value) : 0;
   const effectiveDeliveryFee = promoApplied?.type === "delivery" ? 0 : DELIVERY_FEE;
   const total = Math.max(0, subtotal - discountAmount + effectiveDeliveryFee);
 
@@ -251,7 +260,7 @@ function Checkout() {
     setShowPayment(true);
   };
 
-  const placeOrder = async (paymentId: string, orderId?: string) => {
+  const placeOrder = async (paymentId: string, orderId?: string, signature?: string) => {
     setPlacing(true);
 
     try {
@@ -265,6 +274,7 @@ function Checkout() {
           items,
           payment_id: paymentId,
           razorpay_order_id: orderId || "",
+          razorpay_signature: signature || "",
           user_id: user?.id,
         }),
       });
@@ -277,60 +287,21 @@ function Checkout() {
       qc.invalidateQueries({ queryKey: ["ingredients"] });
       setPlacing(false);
       setShowPayment(false);
-      toast.success("Payment successful — your pizza is in the oven!");
+      toast.success("Payment verified — your pizza is in the oven!");
       navigate({ to: "/orders/$id", params: { id: resData.orderId || resData.order?._id } });
       return;
     } catch (apiErr: any) {
-      if (!apiErr.message?.includes("Failed to fetch")) {
-        setPlacing(false);
-        setShowPayment(false);
-        if (apiErr.message?.includes("OUT_OF_STOCK")) {
-          toast.error(
-            `Out of stock: ${apiErr.message.split("OUT_OF_STOCK:")[1]?.trim()} — please adjust your order.`
-          );
-        } else {
-          toast.error(apiErr.message || "Failed to place order");
-        }
-        return;
-      }
-
-      // Fallback local storage order for public preview without deployed backend
-      const fallbackOrderId = `ord_${Date.now()}`;
-      const fallbackOrder = {
-        id: fallbackOrderId,
-        _id: fallbackOrderId,
-        user: user?.id,
-        user_id: user?.id,
-        customer_name: form.name,
-        phone: form.phone,
-        address: form.address,
-        items,
-        subtotal,
-        delivery_fee: deliveryFee,
-        total,
-        payment_id: paymentId,
-        payment_status: "paid",
-        status: "received",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
-      try {
-        const stored = JSON.parse(localStorage.getItem("pizzahub_orders") || "[]");
-        stored.unshift(fallbackOrder);
-        localStorage.setItem("pizzahub_orders", JSON.stringify(stored));
-      } catch {
-        // ignore
-      }
-
       setPlacing(false);
       setShowPayment(false);
-      localStorage.removeItem("pizzahub_cart");
-      qc.invalidateQueries({ queryKey: ["cart"] });
-      qc.invalidateQueries({ queryKey: ["orders"] });
-      qc.invalidateQueries({ queryKey: ["ingredients"] });
-      toast.success("Payment successful — your pizza is on its way!");
-      navigate({ to: "/orders/$id", params: { id: fallbackOrderId } });
+      if (apiErr.message?.includes("OUT_OF_STOCK")) {
+        toast.error(
+          `Out of stock: ${apiErr.message.split("OUT_OF_STOCK:")[1]?.trim()} — please adjust your order.`,
+        );
+      } else {
+        toast.error(
+          apiErr.message || "Payment or order creation failed. Your order was not placed.",
+        );
+      }
       return;
     }
   };
@@ -454,7 +425,13 @@ function Checkout() {
 
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Delivery</span>
-            <span>{effectiveDeliveryFee === 0 ? <span className="text-emerald-500 font-semibold">FREE</span> : inr(effectiveDeliveryFee)}</span>
+            <span>
+              {effectiveDeliveryFee === 0 ? (
+                <span className="text-emerald-500 font-semibold">FREE</span>
+              ) : (
+                inr(effectiveDeliveryFee)
+              )}
+            </span>
           </div>
           <div className="flex justify-between border-t border-border pt-3 text-lg font-bold">
             <span>Total</span>
@@ -464,11 +441,7 @@ function Checkout() {
       </div>
 
       {showPayment && (
-        <PaymentSheet
-          amount={total}
-          onCancel={() => setShowPayment(false)}
-          onPaid={placeOrder}
-        />
+        <PaymentSheet amount={total} onCancel={() => setShowPayment(false)} onPaid={placeOrder} />
       )}
     </div>
   );

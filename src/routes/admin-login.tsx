@@ -123,7 +123,8 @@ function AdminLogin() {
         </span>
         <h1 className="font-display text-2xl font-extrabold tracking-tight">Staff Console Login</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Restricted kitchen portal. Customer accounts are not permitted and cannot access admin features.
+          Restricted kitchen portal. Customer accounts are not permitted and cannot access admin
+          features.
         </p>
 
         {/* Demo Credentials Quick Fill Banner */}
@@ -140,9 +141,7 @@ function AdminLogin() {
               Fill Credentials
             </button>
           </div>
-          <p className="mt-1 font-mono text-muted-foreground">
-            admin@pizzahub.com · Admin@123456
-          </p>
+          <p className="mt-1 font-mono text-muted-foreground">admin@pizzahub.com · Admin@123456</p>
         </div>
 
         {errorMsg && (

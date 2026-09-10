@@ -28,9 +28,11 @@ const createTransporter = () => {
 
   // Helpful configuration warning when credentials are not yet configured
   console.warn(
-    "\n⚠️  [Email Service] EMAIL_USER / EMAIL_PASSWORD (or SMTP_USER / SMTP_PASS) not configured in environment."
+    "\n⚠️  [Email Service] EMAIL_USER / EMAIL_PASSWORD (or SMTP_USER / SMTP_PASS) not configured in environment.",
   );
-  console.warn("ℹ️  Outgoing emails (verification, password reset, low-stock alerts) will be logged to the server console.\n");
+  console.warn(
+    "ℹ️  Outgoing emails (verification, password reset, low-stock alerts) will be logged to the server console.\n",
+  );
 
   // Safe fallback simulator for local development / testing without live SMTP credentials
   return {
@@ -123,7 +125,7 @@ export const sendLowStockAlertEmail = async (adminEmail, items) => {
         <td style="padding: 10px; text-transform: capitalize; color: #4b5563;">${item.category}</td>
         <td style="padding: 10px; color: #dc2626; font-weight: 700;">${item.stock_qty} units</td>
         <td style="padding: 10px; color: #6b7280;">${item.low_stock_threshold} units</td>
-      </tr>`
+      </tr>`,
     )
     .join("");
 

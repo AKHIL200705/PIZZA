@@ -13,8 +13,8 @@ export function Footer() {
             <span className="font-display text-lg font-extrabold">PizzaHub</span>
           </div>
           <p className="mt-3 text-sm text-muted-foreground">
-            Fresh dough, fire ovens and a pizza built exactly your way — delivered hot in
-            30 minutes.
+            Fresh dough, fire ovens and a pizza built exactly your way — delivered hot in 30
+            minutes.
           </p>
         </div>
         <div>

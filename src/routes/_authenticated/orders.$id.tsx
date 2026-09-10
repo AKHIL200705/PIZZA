@@ -137,7 +137,9 @@ function TrackOrder() {
           </h1>
           <p className="mt-1 text-xs text-muted-foreground">
             Placed {formatDate(order.created_at)} · Payment Reference:{" "}
-            <span className="font-mono text-foreground font-semibold">{order.payment_id || "Verified"}</span>
+            <span className="font-mono text-foreground font-semibold">
+              {order.payment_id || "Verified"}
+            </span>
           </p>
         </div>
 
@@ -208,12 +210,19 @@ function TrackOrder() {
         <div className="glass-card space-y-4 rounded-3xl p-6 sm:p-8 border border-border/80 shadow-xl lg:col-span-7">
           <div className="flex items-center justify-between border-b border-border/70 pb-3">
             <h3 className="font-display text-xl font-bold text-foreground">Items in Order</h3>
-            <span className="text-xs font-semibold text-muted-foreground">{items.length} item(s)</span>
+            <span className="text-xs font-semibold text-muted-foreground">
+              {items.length} item(s)
+            </span>
           </div>
 
           <ul className="space-y-4 divide-y divide-border/40">
             {items.map((item) => {
-              const details = (item.details || {}) as { veggies?: string[]; base?: string; sauce?: string; cheese?: string };
+              const details = (item.details || {}) as {
+                veggies?: string[];
+                base?: string;
+                sauce?: string;
+                cheese?: string;
+              };
               return (
                 <li key={item.id} className="pt-4 first:pt-0 flex gap-4 items-start">
                   <img
@@ -297,11 +306,15 @@ function TrackOrder() {
               </div>
               <div className="flex justify-between text-muted-foreground">
                 <span>Express Delivery Fee</span>
-                <span className="text-foreground font-semibold">{inr(Number(order.delivery_fee))}</span>
+                <span className="text-foreground font-semibold">
+                  {inr(Number(order.delivery_fee))}
+                </span>
               </div>
               <div className="flex justify-between items-center text-sm font-bold border-t border-border/60 pt-3">
                 <span className="text-foreground">Total Paid</span>
-                <span className="font-display text-xl text-primary">{inr(Number(order.total))}</span>
+                <span className="font-display text-xl text-primary">
+                  {inr(Number(order.total))}
+                </span>
               </div>
             </div>
           </div>

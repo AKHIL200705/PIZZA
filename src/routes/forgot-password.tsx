@@ -65,15 +65,17 @@ function ForgotPassword() {
   return (
     <div className="mx-auto max-w-md px-4 py-20">
       <div className="glass-card rounded-2xl p-8 border border-border/80 shadow-2xl">
-        <h1 className="font-display text-2xl font-extrabold tracking-tight">Forgot your password?</h1>
+        <h1 className="font-display text-2xl font-extrabold tracking-tight">
+          Forgot your password?
+        </h1>
         {sent ? (
           <div className="mt-4 space-y-4">
             <span className="ember-gradient mx-auto flex h-12 w-12 items-center justify-center rounded-2xl shadow-lg">
               <MailCheck className="h-6 w-6 text-primary-foreground" aria-hidden />
             </span>
             <p className="text-sm text-muted-foreground text-center">
-              If an account exists for <strong>{email}</strong>, a reset link has been dispatched to your email.
-              The link expires after 1 hour for security.
+              If an account exists for <strong>{email}</strong>, a reset link has been dispatched to
+              your email. The link expires after 1 hour for security.
             </p>
           </div>
         ) : (

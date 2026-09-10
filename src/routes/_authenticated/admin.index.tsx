@@ -56,9 +56,7 @@ function AdminDashboard() {
   const revenue = all
     .filter((o) => o.status !== "Cancelled")
     .reduce((sum, o) => sum + Number(o.total), 0);
-  const lowStock = (ingredients ?? []).filter(
-    (i) => i.stock_qty < i.low_stock_threshold,
-  );
+  const lowStock = (ingredients ?? []).filter((i) => i.stock_qty < i.low_stock_threshold);
 
   return (
     <AdminShell title="Dashboard">
@@ -76,8 +74,7 @@ function AdminDashboard() {
           <div className="mt-8 grid gap-6 lg:grid-cols-2">
             <section className="glass-card rounded-2xl p-6">
               <h2 className="font-display flex items-center gap-2 text-xl font-bold">
-                <AlertTriangle className="h-5 w-5 text-warning" aria-hidden /> Low stock
-                alerts
+                <AlertTriangle className="h-5 w-5 text-warning" aria-hidden /> Low stock alerts
               </h2>
               {lowStock.length === 0 ? (
                 <p className="mt-3 text-sm text-muted-foreground">
@@ -112,9 +109,7 @@ function AdminDashboard() {
                     <span className="font-semibold">{inr(Number(o.total))}</span>
                   </li>
                 ))}
-                {all.length === 0 && (
-                  <li className="text-muted-foreground">No orders yet.</li>
-                )}
+                {all.length === 0 && <li className="text-muted-foreground">No orders yet.</li>}
               </ul>
             </section>
           </div>

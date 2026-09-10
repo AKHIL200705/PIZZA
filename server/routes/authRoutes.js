@@ -64,6 +64,7 @@ router.post("/register", async (req, res) => {
 
     res.status(201).json({
       message: "Registration successful. Please verify your email before logging in.",
+      verificationToken: process.env.NODE_ENV === "production" ? undefined : verificationToken,
       user: {
         id: user._id,
         name: user.name,

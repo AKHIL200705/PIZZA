@@ -14,7 +14,7 @@ const userSchema = new mongoose.Schema(
     phone: { type: String, default: "" },
     address: { type: String, default: "" },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export const User = mongoose.model("User", userSchema);

@@ -30,7 +30,8 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "PizzaHub — Artisanal Stone-Fired Pizza" },
       {
         property: "og:description",
-        content: "Build your perfect pizza layer-by-layer. Fast, fresh, and tracked live to your door.",
+        content:
+          "Build your perfect pizza layer-by-layer. Fast, fresh, and tracked live to your door.",
       },
     ],
   }),
@@ -162,9 +163,9 @@ function Home() {
 
             {/* Subheading */}
             <p className="max-w-xl text-base text-muted-foreground sm:text-lg leading-relaxed">
-              Build your signature pizza layer by layer with cold-fermented dough, crushed
-              San Marzano tomatoes, and artisan cheeses. Stone-baked at 480°C and tracked live
-              from our oven straight to your hands.
+              Build your signature pizza layer by layer with cold-fermented dough, crushed San
+              Marzano tomatoes, and artisan cheeses. Stone-baked at 480°C and tracked live from our
+              oven straight to your hands.
             </p>
 
             {/* Action Buttons */}
@@ -237,7 +238,9 @@ function Home() {
                     <h3 className="font-display text-xl font-bold mt-1 text-foreground">
                       Margherita Rustica
                     </h3>
-                    <p className="text-xs text-muted-foreground">San Marzano · Fiordilatte · Basil</p>
+                    <p className="text-xs text-muted-foreground">
+                      San Marzano · Fiordilatte · Basil
+                    </p>
                   </div>
                   <Link
                     to="/builder"
@@ -377,10 +380,7 @@ function Home() {
       {/* ===================== 4-STEP HOW IT WORKS ===================== */}
       <section className="border-y border-border/80 bg-card/40 py-24 backdrop-blur-xs">
         <div className="mx-auto max-w-7xl px-4">
-          <SectionTitle
-            eyebrow="The Pizza Creation Pipeline"
-            title="How PizzaHub Works"
-          />
+          <SectionTitle eyebrow="The Pizza Creation Pipeline" title="How PizzaHub Works" />
 
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 mt-12">
             {steps.map((step) => (
@@ -405,9 +405,7 @@ function Home() {
                   <h3 className="font-display mt-5 text-xl font-bold text-foreground">
                     {step.title}
                   </h3>
-                  <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
-                    {step.text}
-                  </p>
+                  <p className="mt-2 text-xs text-muted-foreground leading-relaxed">{step.text}</p>
                 </div>
 
                 <div className="mt-6 pt-3 border-t border-border/50 text-[11px] font-semibold text-primary flex items-center gap-1">
@@ -419,10 +417,7 @@ function Home() {
           </div>
 
           <div className="mt-12 text-center">
-            <Link
-              to="/builder"
-              className={`${btnPrimary} px-8 py-3.5 text-sm font-bold shadow-lg`}
-            >
+            <Link to="/builder" className={`${btnPrimary} px-8 py-3.5 text-sm font-bold shadow-lg`}>
               <ChefHat className="h-4 w-4" />
               <span>Launch the Custom Pizza Builder</span>
             </Link>
@@ -479,10 +474,7 @@ function Home() {
       {/* ===================== TESTIMONIALS ===================== */}
       <section className="border-y border-border/80 bg-card/30 py-24 backdrop-blur-xs">
         <div className="mx-auto max-w-7xl px-4">
-          <SectionTitle
-            eyebrow="Pizza Lovers Speak"
-            title="What Foodies Say About PizzaHub"
-          />
+          <SectionTitle eyebrow="Pizza Lovers Speak" title="What Foodies Say About PizzaHub" />
 
           <div className="grid gap-6 md:grid-cols-3 mt-10">
             {testimonials.map((t) => (
@@ -523,8 +515,8 @@ function Home() {
               <span className="ember-text">Build Yours Right Now.</span>
             </h2>
             <p className="mx-auto max-w-xl text-sm text-muted-foreground leading-relaxed">
-              Experience the power of custom stone-baked pizza crafted with fresh daily stock
-              and delivered piping hot.
+              Experience the power of custom stone-baked pizza crafted with fresh daily stock and
+              delivered piping hot.
             </p>
             <div className="pt-4 flex flex-wrap justify-center gap-4">
               <Link to="/builder" className={`${btnPrimary} px-8 py-3.5 text-base shadow-xl`}>

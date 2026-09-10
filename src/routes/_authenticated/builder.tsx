@@ -152,7 +152,10 @@ function InteractivePizzaCanvas({
 
             if (vName.includes("capsicum") || vName.includes("bell pepper")) {
               return (
-                <div key={veg.id} className="absolute inset-0 pointer-events-none animate-in fade-in zoom-in-90 duration-300">
+                <div
+                  key={veg.id}
+                  className="absolute inset-0 pointer-events-none animate-in fade-in zoom-in-90 duration-300"
+                >
                   <div className="absolute top-8 left-14 h-4 w-8 rounded-full border-2 border-emerald-500 bg-emerald-600/30 rotate-12" />
                   <div className="absolute top-20 right-14 h-4 w-9 rounded-full border-2 border-emerald-500 bg-emerald-600/30 -rotate-45" />
                   <div className="absolute bottom-14 left-10 h-4 w-8 rounded-full border-2 border-emerald-500 bg-emerald-600/30 rotate-45" />
@@ -164,7 +167,10 @@ function InteractivePizzaCanvas({
 
             if (vName.includes("onion")) {
               return (
-                <div key={veg.id} className="absolute inset-0 pointer-events-none animate-in fade-in zoom-in-90 duration-300">
+                <div
+                  key={veg.id}
+                  className="absolute inset-0 pointer-events-none animate-in fade-in zoom-in-90 duration-300"
+                >
                   <div className="absolute top-12 right-24 h-2 w-7 rounded-full bg-fuchsia-800 rotate-45 border border-fuchsia-400" />
                   <div className="absolute top-24 left-12 h-2 w-8 rounded-full bg-fuchsia-800 -rotate-12 border border-fuchsia-400" />
                   <div className="absolute bottom-16 right-14 h-2 w-6 rounded-full bg-fuchsia-800 rotate-90 border border-fuchsia-400" />
@@ -175,7 +181,10 @@ function InteractivePizzaCanvas({
 
             if (vName.includes("olive")) {
               return (
-                <div key={veg.id} className="absolute inset-0 pointer-events-none animate-in fade-in zoom-in-90 duration-300">
+                <div
+                  key={veg.id}
+                  className="absolute inset-0 pointer-events-none animate-in fade-in zoom-in-90 duration-300"
+                >
                   <div className="absolute top-10 left-20 h-4 w-4 rounded-full border-3 border-black bg-transparent" />
                   <div className="absolute top-28 right-16 h-4 w-4 rounded-full border-3 border-black bg-transparent" />
                   <div className="absolute bottom-20 left-16 h-4 w-4 rounded-full border-3 border-black bg-transparent" />
@@ -187,7 +196,10 @@ function InteractivePizzaCanvas({
 
             if (vName.includes("mushroom")) {
               return (
-                <div key={veg.id} className="absolute inset-0 pointer-events-none animate-in fade-in zoom-in-90 duration-300">
+                <div
+                  key={veg.id}
+                  className="absolute inset-0 pointer-events-none animate-in fade-in zoom-in-90 duration-300"
+                >
                   <div className="absolute top-16 left-16 h-5 w-6 rounded-t-full bg-stone-700 rotate-12 border-b-2 border-stone-900" />
                   <div className="absolute top-14 right-18 h-5 w-6 rounded-t-full bg-stone-700 -rotate-30 border-b-2 border-stone-900" />
                   <div className="absolute bottom-12 left-24 h-5 w-6 rounded-t-full bg-stone-700 rotate-45 border-b-2 border-stone-900" />
@@ -198,7 +210,10 @@ function InteractivePizzaCanvas({
 
             if (vName.includes("corn")) {
               return (
-                <div key={veg.id} className="absolute inset-0 pointer-events-none animate-in fade-in zoom-in-90 duration-300">
+                <div
+                  key={veg.id}
+                  className="absolute inset-0 pointer-events-none animate-in fade-in zoom-in-90 duration-300"
+                >
                   <div className="absolute top-14 left-28 h-2.5 w-2.5 rounded-full bg-yellow-400 shadow-xs" />
                   <div className="absolute top-24 right-28 h-2.5 w-2.5 rounded-full bg-yellow-400 shadow-xs" />
                   <div className="absolute bottom-16 left-28 h-2.5 w-2.5 rounded-full bg-yellow-400 shadow-xs" />
@@ -211,7 +226,10 @@ function InteractivePizzaCanvas({
 
             if (vName.includes("jalapeno") || vName.includes("jalapeño")) {
               return (
-                <div key={veg.id} className="absolute inset-0 pointer-events-none animate-in fade-in zoom-in-90 duration-300">
+                <div
+                  key={veg.id}
+                  className="absolute inset-0 pointer-events-none animate-in fade-in zoom-in-90 duration-300"
+                >
                   <div className="absolute top-18 left-22 h-4 w-4 rounded-full border-3 border-emerald-700 bg-emerald-900/80" />
                   <div className="absolute top-30 right-22 h-4 w-4 rounded-full border-3 border-emerald-700 bg-emerald-900/80" />
                   <div className="absolute bottom-18 right-28 h-4 w-4 rounded-full border-3 border-emerald-700 bg-emerald-900/80" />
@@ -222,7 +240,10 @@ function InteractivePizzaCanvas({
 
             if (vName.includes("tomato")) {
               return (
-                <div key={veg.id} className="absolute inset-0 pointer-events-none animate-in fade-in zoom-in-90 duration-300">
+                <div
+                  key={veg.id}
+                  className="absolute inset-0 pointer-events-none animate-in fade-in zoom-in-90 duration-300"
+                >
                   <div className="absolute top-12 left-12 h-3.5 w-3.5 rounded-sm bg-red-600 rotate-12 shadow-xs" />
                   <div className="absolute top-26 right-12 h-3.5 w-3.5 rounded-sm bg-red-600 -rotate-25 shadow-xs" />
                   <div className="absolute bottom-14 right-18 h-3.5 w-3.5 rounded-sm bg-red-600 rotate-45 shadow-xs" />
@@ -288,9 +309,7 @@ function OptionCard({
               <span className="text-emerald-400">Included</span>
             )}
           </span>
-          <span className="text-muted-foreground text-[11px]">
-            ({item.stock_qty} left)
-          </span>
+          <span className="text-muted-foreground text-[11px]">({item.stock_qty} left)</span>
         </div>
       </div>
 
@@ -401,7 +420,9 @@ function Builder() {
 
         {/* Step counter pill */}
         <div className="rounded-xl border border-border bg-card/60 px-4 py-2 text-xs font-semibold text-muted-foreground flex items-center gap-2 shadow-xs">
-          <span>Step {step + 1} of {STEPS.length}:</span>
+          <span>
+            Step {step + 1} of {STEPS.length}:
+          </span>
           <span className="font-bold text-foreground">{STEPS[step]}</span>
         </div>
       </div>
@@ -440,7 +461,9 @@ function Builder() {
             <div>
               <div className="mb-4">
                 <h2 className="font-display text-2xl font-bold">Step 1: Choose Your Crust</h2>
-                <p className="text-xs text-muted-foreground">Every great pizza starts with an artisanal crust.</p>
+                <p className="text-xs text-muted-foreground">
+                  Every great pizza starts with an artisanal crust.
+                </p>
               </div>
               <div className="grid gap-3.5 sm:grid-cols-2">
                 {byCategory("base").map((i) => (
@@ -459,7 +482,9 @@ function Builder() {
             <div>
               <div className="mb-4">
                 <h2 className="font-display text-2xl font-bold">Step 2: Spread the Sauce</h2>
-                <p className="text-xs text-muted-foreground">Scratch-made sauces lightly simmered to perfection.</p>
+                <p className="text-xs text-muted-foreground">
+                  Scratch-made sauces lightly simmered to perfection.
+                </p>
               </div>
               <div className="grid gap-3.5 sm:grid-cols-2">
                 {byCategory("sauce").map((i) => (
@@ -478,7 +503,9 @@ function Builder() {
             <div>
               <div className="mb-4">
                 <h2 className="font-display text-2xl font-bold">Step 3: Blanket with Cheese</h2>
-                <p className="text-xs text-muted-foreground">100% whole milk dairy that melts to golden blistered perfection.</p>
+                <p className="text-xs text-muted-foreground">
+                  100% whole milk dairy that melts to golden blistered perfection.
+                </p>
               </div>
               <div className="grid gap-3.5 sm:grid-cols-2">
                 {byCategory("cheese").map((i) => (
@@ -496,8 +523,12 @@ function Builder() {
           {step === 3 && (
             <div>
               <div className="mb-4">
-                <h2 className="font-display text-2xl font-bold">Step 4: Pile on Veggies & Toppings</h2>
-                <p className="text-xs text-muted-foreground">Select multiple toppings. Each ingredient is prepped fresh daily.</p>
+                <h2 className="font-display text-2xl font-bold">
+                  Step 4: Pile on Veggies & Toppings
+                </h2>
+                <p className="text-xs text-muted-foreground">
+                  Select multiple toppings. Each ingredient is prepped fresh daily.
+                </p>
               </div>
               <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
                 {byCategory("veggie").map((i) => (
@@ -519,7 +550,9 @@ function Builder() {
                   Ready for the Oven
                 </span>
                 <h2 className="font-display text-2xl font-bold mt-2">Recipe Summary</h2>
-                <p className="text-xs text-muted-foreground">Review your customized pizza before sending it to the kitchen.</p>
+                <p className="text-xs text-muted-foreground">
+                  Review your customized pizza before sending it to the kitchen.
+                </p>
               </div>
 
               <dl className="space-y-3 text-sm">
@@ -527,16 +560,24 @@ function Builder() {
                   ["Artisanal Crust", base?.name],
                   ["Simmered Sauce", sauce?.name],
                   ["Melted Cheese", cheese?.name],
-                  ["Fresh Toppings", veggies.map((v) => v.name).join(", ") || "No additional toppings"],
+                  [
+                    "Fresh Toppings",
+                    veggies.map((v) => v.name).join(", ") || "No additional toppings",
+                  ],
                 ].map(([label, value]) => (
-                  <div key={label} className="flex justify-between gap-4 border-b border-border/80 pb-2.5">
+                  <div
+                    key={label}
+                    className="flex justify-between gap-4 border-b border-border/80 pb-2.5"
+                  >
                     <dt className="text-muted-foreground font-medium">{label}</dt>
                     <dd className="text-right font-bold text-foreground">{value}</dd>
                   </div>
                 ))}
                 <div className="flex justify-between gap-4 pt-1">
                   <dt className="text-base font-bold text-foreground">Total Price</dt>
-                  <dd className="font-display text-2xl font-extrabold text-primary">{inr(price)}</dd>
+                  <dd className="font-display text-2xl font-extrabold text-primary">
+                    {inr(price)}
+                  </dd>
                 </div>
               </dl>
 
@@ -577,12 +618,7 @@ function Builder() {
 
         {/* Right: Sticky Visual Pizza Canvas & Live Receipt */}
         <aside className="glass-card h-fit space-y-5 rounded-3xl p-6 shadow-xl border border-border/80 lg:sticky lg:top-24">
-          <InteractivePizzaCanvas
-            base={base}
-            sauce={sauce}
-            cheese={cheese}
-            veggies={veggies}
-          />
+          <InteractivePizzaCanvas base={base} sauce={sauce} cheese={cheese} veggies={veggies} />
 
           <div>
             <div className="flex items-center justify-between">
@@ -595,15 +631,21 @@ function Builder() {
             <ul className="mt-3 space-y-1.5 text-xs text-muted-foreground divide-y divide-border/40">
               <li className="pt-1.5 flex justify-between">
                 <span>Crust:</span>
-                <strong className="text-foreground font-semibold">{base?.name ?? "Pick Crust"}</strong>
+                <strong className="text-foreground font-semibold">
+                  {base?.name ?? "Pick Crust"}
+                </strong>
               </li>
               <li className="pt-1.5 flex justify-between">
                 <span>Sauce:</span>
-                <strong className="text-foreground font-semibold">{sauce?.name ?? "Pick Sauce"}</strong>
+                <strong className="text-foreground font-semibold">
+                  {sauce?.name ?? "Pick Sauce"}
+                </strong>
               </li>
               <li className="pt-1.5 flex justify-between">
                 <span>Cheese:</span>
-                <strong className="text-foreground font-semibold">{cheese?.name ?? "Pick Cheese"}</strong>
+                <strong className="text-foreground font-semibold">
+                  {cheese?.name ?? "Pick Cheese"}
+                </strong>
               </li>
               <li className="pt-1.5 flex justify-between">
                 <span>Toppings ({veggies.length}):</span>
@@ -616,7 +658,9 @@ function Builder() {
 
           <div className="flex items-center justify-between border-t border-border pt-4">
             <div>
-              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Current Total</p>
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                Current Total
+              </p>
               <p className="font-display text-2xl font-extrabold text-primary">{inr(price)}</p>
             </div>
             {step < STEPS.length - 1 && canContinue && (

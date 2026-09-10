@@ -332,9 +332,7 @@ function AuthPage() {
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : "Something went wrong";
-      toast.error(
-        message.includes("Invalid login") ? "Wrong email or password" : message,
-      );
+      toast.error(message.includes("Invalid login") ? "Wrong email or password" : message);
     } finally {
       setLoading(false);
     }
@@ -349,8 +347,8 @@ function AuthPage() {
           </span>
           <h1 className="font-display text-3xl font-extrabold">Verify your email</h1>
           <p className="mt-3 text-sm text-muted-foreground">
-            We sent a confirmation link to <strong>{form.email}</strong>. Click it to activate
-            your account, then come back and sign in.
+            We sent a confirmation link to <strong>{form.email}</strong>. Click it to activate your
+            account, then come back and sign in.
           </p>
           <button
             onClick={() => {
@@ -379,7 +377,9 @@ function AuthPage() {
                 setUnverifiedEmail("");
               }}
               className={`rounded-lg py-2 text-sm font-semibold transition-colors ${
-                mode === m ? "ember-gradient text-primary-foreground shadow-sm" : "text-muted-foreground"
+                mode === m
+                  ? "ember-gradient text-primary-foreground shadow-sm"
+                  : "text-muted-foreground"
               }`}
             >
               {m === "login" ? "Sign in" : "Register"}

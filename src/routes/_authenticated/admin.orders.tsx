@@ -15,8 +15,7 @@ export const Route = createFileRoute("/_authenticated/admin/orders")({
       { title: "Order management — PizzaHub kitchen console" },
       {
         name: "description",
-        content:
-          "Search, filter and progress every PizzaHub order from received to delivered.",
+        content: "Search, filter and progress every PizzaHub order from received to delivered.",
       },
       { property: "og:title", content: "Order management — PizzaHub" },
       { property: "og:description", content: "Search, filter and progress every order." },
@@ -26,16 +25,12 @@ export const Route = createFileRoute("/_authenticated/admin/orders")({
   component: AdminOrders,
 });
 
-const STATUSES = [
-  "Order Received",
-  "In Kitchen",
-  "Sent to Delivery",
-  "Delivered",
-  "Cancelled",
-];
+const STATUSES = ["Order Received", "In Kitchen", "Sent to Delivery", "Delivered", "Cancelled"];
 
 function OrderDetails({ order }: { order: Order }) {
-  const [items, setItems] = useState<OrderItem[] | null>(order.items && order.items.length > 0 ? order.items : null);
+  const [items, setItems] = useState<OrderItem[] | null>(
+    order.items && order.items.length > 0 ? order.items : null,
+  );
 
   useEffect(() => {
     if (order.items && order.items.length > 0) {
@@ -58,39 +53,63 @@ function OrderDetails({ order }: { order: Order }) {
     <div className="rounded-xl bg-secondary/40 border border-border/80 p-4 text-sm space-y-3">
       <div className="grid sm:grid-cols-2 gap-2 text-xs">
         <div>
-          <span className="text-muted-foreground uppercase tracking-wider font-semibold block">Customer Details</span>
+          <span className="text-muted-foreground uppercase tracking-wider font-semibold block">
+            Customer Details
+          </span>
           <p className="font-semibold text-foreground text-sm mt-0.5">{order.customer_name}</p>
           <p className="text-muted-foreground">{order.phone}</p>
         </div>
         <div>
-          <span className="text-muted-foreground uppercase tracking-wider font-semibold block">Delivery Destination</span>
+          <span className="text-muted-foreground uppercase tracking-wider font-semibold block">
+            Delivery Destination
+          </span>
           <p className="text-foreground text-xs mt-0.5 leading-relaxed">{order.address}</p>
         </div>
       </div>
 
       <div className="border-t border-border/60 pt-2.5 flex items-center justify-between text-xs text-muted-foreground">
-        <span>Payment Reference: <strong className="font-mono text-foreground">{order.payment_id}</strong></span>
-        <span className="capitalize font-semibold text-emerald-500">Status: {order.payment_status || "Paid"}</span>
+        <span>
+          Payment Reference:{" "}
+          <strong className="font-mono text-foreground">{order.payment_id}</strong>
+        </span>
+        <span className="capitalize font-semibold text-emerald-500">
+          Status: {order.payment_status || "Paid"}
+        </span>
       </div>
 
       <div className="border-t border-border/60 pt-2.5">
-        <span className="text-muted-foreground uppercase tracking-wider font-semibold block text-xs mb-2">Ordered Items & Custom Ingredients</span>
+        <span className="text-muted-foreground uppercase tracking-wider font-semibold block text-xs mb-2">
+          Ordered Items & Custom Ingredients
+        </span>
         <ul className="space-y-1.5 text-xs">
           {displayItems.map((item) => {
-            const d = (item.details || {}) as { base?: string; sauce?: string; cheese?: string; veggies?: string[] };
+            const d = (item.details || {}) as {
+              base?: string;
+              sauce?: string;
+              cheese?: string;
+              veggies?: string[];
+            };
             return (
-              <li key={item.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 rounded-lg bg-background/60 p-2 border border-border/40">
+              <li
+                key={item.id}
+                className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 rounded-lg bg-background/60 p-2 border border-border/40"
+              >
                 <div>
-                  <span className="font-bold text-foreground">{item.quantity} × {item.name}</span>
+                  <span className="font-bold text-foreground">
+                    {item.quantity} × {item.name}
+                  </span>
                   {(d.base || d.sauce || d.cheese || (d.veggies && d.veggies.length > 0)) && (
                     <span className="text-muted-foreground block text-[11px] mt-0.5">
-                      Base: <strong className="text-foreground/90">{d.base || "Standard"}</strong> · Sauce: <strong className="text-foreground/90">{d.sauce || "Standard"}</strong>
+                      Base: <strong className="text-foreground/90">{d.base || "Standard"}</strong> ·
+                      Sauce: <strong className="text-foreground/90">{d.sauce || "Standard"}</strong>
                       {d.cheese ? ` · Cheese: ${d.cheese}` : ""}
                       {d.veggies?.length ? ` · Veggies: ${d.veggies.join(", ")}` : ""}
                     </span>
                   )}
                 </div>
-                <span className="font-semibold text-foreground shrink-0">{inr(Number(item.unit_price) * (item.quantity || 1))}</span>
+                <span className="font-semibold text-foreground shrink-0">
+                  {inr(Number(item.unit_price) * (item.quantity || 1))}
+                </span>
               </li>
             );
           })}
@@ -175,9 +194,7 @@ function AdminOrders() {
                     {order.customer_name} · {formatDate(order.created_at)}
                   </p>
                 </div>
-                <span className="font-display text-xl font-bold">
-                  {inr(Number(order.total))}
-                </span>
+                <span className="font-display text-xl font-bold">{inr(Number(order.total))}</span>
                 <select
                   className={`${inputClass} w-48 py-2`}
                   value={order.status}

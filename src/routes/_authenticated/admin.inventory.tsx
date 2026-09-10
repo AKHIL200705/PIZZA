@@ -39,7 +39,7 @@ function Inventory() {
   const totalItems = allIngredients.length;
   const outOfStock = allIngredients.filter((i) => i.stock_qty <= 0);
   const lowStock = allIngredients.filter(
-    (i) => i.stock_qty > 0 && i.stock_qty <= i.low_stock_threshold
+    (i) => i.stock_qty > 0 && i.stock_qty <= i.low_stock_threshold,
   );
   const inStock = allIngredients.filter((i) => i.stock_qty > i.low_stock_threshold);
 
@@ -50,7 +50,7 @@ function Inventory() {
       {
         onSuccess: () => toast.success("Stock quantity updated"),
         onError: (e) => toast.error(e.message),
-      }
+      },
     );
   };
 
@@ -64,7 +64,7 @@ function Inventory() {
       {
         onSuccess: () => toast.success("Stock level updated"),
         onError: (e) => toast.error(e.message),
-      }
+      },
     );
   };
 
@@ -78,7 +78,7 @@ function Inventory() {
       {
         onSuccess: () => toast.success("Low-stock threshold updated"),
         onError: (e) => toast.error(e.message),
-      }
+      },
     );
   };
 
@@ -97,21 +97,27 @@ function Inventory() {
           <div className="flex items-center gap-2 text-emerald-500 text-xs font-semibold uppercase tracking-wider">
             <CheckCircle2 className="h-4 w-4" /> Healthy In-Stock
           </div>
-          <p className="font-display mt-2 text-3xl font-extrabold text-emerald-500">{inStock.length}</p>
+          <p className="font-display mt-2 text-3xl font-extrabold text-emerald-500">
+            {inStock.length}
+          </p>
         </div>
 
         <div className="glass-card rounded-2xl p-5 border border-border/80">
           <div className="flex items-center gap-2 text-warning text-xs font-semibold uppercase tracking-wider">
             <AlertTriangle className="h-4 w-4" /> Low-Stock Alert
           </div>
-          <p className="font-display mt-2 text-3xl font-extrabold text-warning">{lowStock.length}</p>
+          <p className="font-display mt-2 text-3xl font-extrabold text-warning">
+            {lowStock.length}
+          </p>
         </div>
 
         <div className="glass-card rounded-2xl p-5 border border-border/80">
           <div className="flex items-center gap-2 text-destructive text-xs font-semibold uppercase tracking-wider">
             <XCircle className="h-4 w-4" /> Out of Stock
           </div>
-          <p className="font-display mt-2 text-3xl font-extrabold text-destructive">{outOfStock.length}</p>
+          <p className="font-display mt-2 text-3xl font-extrabold text-destructive">
+            {outOfStock.length}
+          </p>
         </div>
       </div>
 
@@ -155,7 +161,10 @@ function Inventory() {
                   const isLowStock = !isOutOfStock && i.stock_qty <= i.low_stock_threshold;
 
                   return (
-                    <tr key={i.id} className="border-b border-border/50 hover:bg-secondary/20 transition-colors last:border-0">
+                    <tr
+                      key={i.id}
+                      className="border-b border-border/50 hover:bg-secondary/20 transition-colors last:border-0"
+                    >
                       <td className="p-4 font-semibold text-foreground">{i.name}</td>
                       <td className="p-4 capitalize text-muted-foreground">{i.category}</td>
                       <td className="p-4">

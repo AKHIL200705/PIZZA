@@ -5,10 +5,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "pizza_hub_oasis_secret_jwt_key_202
 
 export const protect = async (req, res, next) => {
   let token;
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer")
-  ) {
+  if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
     try {
       token = req.headers.authorization.split(" ")[1];
       const decoded = jwt.verify(token, JWT_SECRET);

@@ -60,7 +60,10 @@ function ResetPassword() {
     setLoading(true);
 
     // 1. Check token in URL for Express backend
-    const token = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("token") : null;
+    const token =
+      typeof window !== "undefined"
+        ? new URLSearchParams(window.location.search).get("token")
+        : null;
     if (token) {
       try {
         const res = await fetch(`${API_BASE}/api/auth/reset-password`, {
@@ -100,7 +103,8 @@ function ResetPassword() {
         <h1 className="font-display text-2xl font-extrabold tracking-tight">Set a new password</h1>
         {!ready ? (
           <p className="mt-3 text-sm text-muted-foreground">
-            Open this page from the reset link in your email. If the link has expired, please request a fresh reset link.
+            Open this page from the reset link in your email. If the link has expired, please
+            request a fresh reset link.
           </p>
         ) : (
           <form onSubmit={submit} className="mt-6 space-y-4">

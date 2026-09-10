@@ -62,9 +62,13 @@ export function PizzaCard({ pizza }: { pizza: Pizza }) {
     );
   };
 
-  const isVeg = !pizza.name.toLowerCase().includes("chicken") && !pizza.name.toLowerCase().includes("pepperoni");
-  const isSpicy = pizza.name.toLowerCase().includes("spicy") || pizza.name.toLowerCase().includes("peri");
-  const isBestseller = pizza.name.toLowerCase().includes("margherita") || pizza.name.toLowerCase().includes("paneer");
+  const isVeg =
+    !pizza.name.toLowerCase().includes("chicken") &&
+    !pizza.name.toLowerCase().includes("pepperoni");
+  const isSpicy =
+    pizza.name.toLowerCase().includes("spicy") || pizza.name.toLowerCase().includes("peri");
+  const isBestseller =
+    pizza.name.toLowerCase().includes("margherita") || pizza.name.toLowerCase().includes("paneer");
 
   return (
     <article className="glass-card group flex flex-col justify-between overflow-hidden rounded-3xl transition-all duration-300 hover:-translate-y-1.5 hover:border-primary/50 hover:shadow-2xl border border-border/80">
@@ -88,7 +92,9 @@ export function PizzaCard({ pizza }: { pizza: Pizza }) {
                 : "bg-red-950/80 text-red-400 border border-red-500/40"
             }`}
           >
-            <span className={`h-1.5 w-1.5 rounded-full ${isVeg ? "bg-emerald-400" : "bg-red-400"}`} />
+            <span
+              className={`h-1.5 w-1.5 rounded-full ${isVeg ? "bg-emerald-400" : "bg-red-400"}`}
+            />
             {isVeg ? "VEG" : "NON-VEG"}
           </span>
 
@@ -177,7 +183,9 @@ function MenuPage() {
     if (!matchesSearch) return false;
 
     if (filter === "veg") {
-      return !p.name.toLowerCase().includes("chicken") && !p.name.toLowerCase().includes("pepperoni");
+      return (
+        !p.name.toLowerCase().includes("chicken") && !p.name.toLowerCase().includes("pepperoni")
+      );
     }
     if (filter === "bestseller") {
       return p.name.toLowerCase().includes("margherita") || p.name.toLowerCase().includes("paneer");
@@ -201,7 +209,8 @@ function MenuPage() {
             Our Handcrafted Pizzas
           </h1>
           <p className="mt-1 text-sm text-muted-foreground max-w-xl">
-            Baked to blistered perfection in our 480°C stone hearth oven with 100% fresh daily stock.
+            Baked to blistered perfection in our 480°C stone hearth oven with 100% fresh daily
+            stock.
           </p>
         </div>
 
@@ -249,17 +258,19 @@ function MenuPage() {
       {/* Pizzas Grid */}
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {isLoading &&
-          Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-96 rounded-3xl" />)}
+          Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-96 rounded-3xl" />
+          ))}
 
-        {!isLoading && filteredPizzas.map((pizza) => (
-          <PizzaCard key={pizza.id} pizza={pizza} />
-        ))}
+        {!isLoading && filteredPizzas.map((pizza) => <PizzaCard key={pizza.id} pizza={pizza} />)}
       </div>
 
       {!isLoading && filteredPizzas.length === 0 && (
         <div className="glass-card rounded-3xl p-12 text-center my-8">
           <p className="font-display text-xl font-bold">No pizzas found matching "{search}"</p>
-          <p className="text-xs text-muted-foreground mt-1">Try another search or build your own custom pizza!</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Try another search or build your own custom pizza!
+          </p>
           <button onClick={() => setSearch("")} className="mt-4 text-xs text-primary underline">
             Clear search
           </button>
@@ -276,7 +287,8 @@ function MenuPage() {
             Want something unique? Build your own pizza.
           </h3>
           <p className="text-xs text-muted-foreground max-w-xl">
-            Choose your dough, scratch sauce, cheeses, and farm-fresh toppings with our interactive visual builder.
+            Choose your dough, scratch sauce, cheeses, and farm-fresh toppings with our interactive
+            visual builder.
           </p>
         </div>
         <Link

@@ -21,7 +21,7 @@ export const runLowStockAudit = async () => {
         $expr: { $gt: ["$stock_qty", "$low_stock_threshold"] },
         lowStockAlertSent: true,
       },
-      { $set: { lowStockAlertSent: false } }
+      { $set: { lowStockAlertSent: false } },
     );
 
     // 2. Find low-stock items that have NOT had an alert sent yet
@@ -32,7 +32,7 @@ export const runLowStockAudit = async () => {
 
     if (itemsNeedingAlert.length > 0) {
       console.log(
-        `[node-cron] Found ${itemsNeedingAlert.length} low-stock item(s) needing alert. Sending email...`
+        `[node-cron] Found ${itemsNeedingAlert.length} low-stock item(s) needing alert. Sending email...`,
       );
 
       const adminUser = await User.findOne({ role: "admin" });
@@ -45,7 +45,9 @@ export const runLowStockAudit = async () => {
       const itemIds = itemsNeedingAlert.map((item) => item._id);
       await Ingredient.updateMany({ _id: { $in: itemIds } }, { $set: { lowStockAlertSent: true } });
 
-      console.log(`[node-cron] Low-stock alert sent for: ${itemsNeedingAlert.map((i) => i.name).join(", ")}`);
+      console.log(
+        `[node-cron] Low-stock alert sent for: ${itemsNeedingAlert.map((i) => i.name).join(", ")}`,
+      );
     } else {
       console.log("[node-cron] Inventory check complete: No new low-stock items need alerts.");
     }

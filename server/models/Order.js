@@ -31,7 +31,7 @@ const orderSchema = new mongoose.Schema(
       default: "Order Received",
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export const Order = mongoose.model("Order", orderSchema);

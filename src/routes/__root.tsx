@@ -84,8 +84,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "PizzaHub — Your Perfect Pizza, Your Way" },
       {
         name: "description",
-        content:
-          "Build a custom pizza, pay securely and track your delivery live with PizzaHub.",
+        content: "Build a custom pizza, pay securely and track your delivery live with PizzaHub.",
       },
       { name: "author", content: "PizzaHub" },
       { property: "og:title", content: "PizzaHub — Your Perfect Pizza, Your Way" },

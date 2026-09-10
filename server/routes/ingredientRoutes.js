@@ -71,7 +71,7 @@ router.patch("/:id", protect, adminOnly, async (req, res) => {
     // If stock dropped to or below threshold, run audit check to notify admin
     if (ingredient.stock_qty <= ingredient.low_stock_threshold && !ingredient.lowStockAlertSent) {
       triggerManualLowStockCheck().catch((err) =>
-        console.error("[Inventory] Audit trigger error:", err.message)
+        console.error("[Inventory] Audit trigger error:", err.message),
       );
     }
 
