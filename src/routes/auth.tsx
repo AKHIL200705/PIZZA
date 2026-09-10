@@ -34,6 +34,9 @@ export const Route = createFileRoute("/auth")({
 type Errors = Record<string, string>;
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const GOOGLE_CLIENT_ID =
+  import.meta.env.VITE_GOOGLE_CLIENT_ID ||
+  "513278132086-oph50arjcimdqb5c4a6jjqmflo0a1gg6.apps.googleusercontent.com";
 
 function GoogleIcon({ className = "h-5 w-5" }: { className?: string }) {
   return (
@@ -64,6 +67,7 @@ function AuthPage() {
   const [errors, setErrors] = useState<Errors>({});
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const [gsiLoaded, setGsiLoaded] = useState(false);
   const googleBtnContainerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -122,13 +126,10 @@ function AuthPage() {
 
   // Load and mount Google Identity Services
   useEffect(() => {
-    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-    if (!clientId) return;
-
     const initGsi = () => {
       if (window.google?.accounts?.id) {
         window.google.accounts.id.initialize({
-          client_id: clientId,
+          client_id: GOOGLE_CLIENT_ID,
           callback: handleGoogleCredentialResponse,
           auto_select: false,
         });
@@ -143,6 +144,7 @@ function AuthPage() {
             shape: "rectangular",
             logo_alignment: "left",
           });
+          setGsiLoaded(true);
         }
       }
     };
@@ -169,20 +171,14 @@ function AuthPage() {
   }, [mode]);
 
   const handleGoogleClick = () => {
-    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-    if (!clientId) {
-      toast.error(
-        "Google Client ID is missing. Add VITE_GOOGLE_CLIENT_ID to .env from Google Cloud Console.",
-      );
-      return;
-    }
-
     if (window.google?.accounts?.id) {
       window.google.accounts.id.prompt((notification: any) => {
         if (notification.isNotDisplayed()) {
-          toast.info("Click the Google Sign-in button directly above.");
+          toast.info("Please use the Google Sign-in button rendered above.");
         }
       });
+    } else {
+      toast.loading("Connecting to Google Identity Services...");
     }
   };
 
@@ -300,8 +296,6 @@ function AuthPage() {
     );
   }
 
-  const hasClientId = Boolean(import.meta.env.VITE_GOOGLE_CLIENT_ID);
-
   return (
     <div className="mx-auto max-w-md px-4 py-16">
       <div className="glass-card rounded-2xl p-8 shadow-xl">
@@ -391,22 +385,21 @@ function AuthPage() {
           </div>
         </div>
 
-        {/* Official Google Button Container */}
-        {hasClientId ? (
-          <div className="flex justify-center my-2 overflow-hidden">
-            <div ref={googleBtnContainerRef} className="w-full flex justify-center" />
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={handleGoogleClick}
-            disabled={loading}
-            className="flex w-full items-center justify-center gap-3 rounded-xl border border-border/80 bg-background/80 hover:bg-muted/70 px-4 py-2.5 text-sm font-semibold text-foreground transition-all shadow-xs active:scale-[0.99]"
-          >
-            <GoogleIcon className="h-5 w-5 shrink-0" />
-            <span>{mode === "login" ? "Sign in with Google" : "Sign up with Google"}</span>
-          </button>
-        )}
+        {/* Google Official Identity Button & Container */}
+        <div className="flex flex-col items-center justify-center my-2 w-full min-h-[44px]">
+          <div ref={googleBtnContainerRef} className="w-full flex justify-center" />
+          {!gsiLoaded && (
+            <button
+              type="button"
+              onClick={handleGoogleClick}
+              disabled={loading}
+              className="flex w-full items-center justify-center gap-3 rounded-xl border border-border/80 bg-background/80 hover:bg-muted/70 px-4 py-2.5 text-sm font-semibold text-foreground transition-all shadow-xs active:scale-[0.99]"
+            >
+              <GoogleIcon className="h-5 w-5 shrink-0" />
+              <span>{mode === "login" ? "Sign in with Google" : "Sign up with Google"}</span>
+            </button>
+          )}
+        </div>
 
         <div className="mt-5 flex justify-between text-sm text-muted-foreground">
           <Link to="/forgot-password" className="hover:text-foreground">

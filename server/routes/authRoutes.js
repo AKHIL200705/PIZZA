@@ -6,8 +6,10 @@ import { User } from "../models/User.js";
 import { generateToken, protect } from "../middleware/auth.js";
 import { sendVerificationEmail, sendPasswordResetEmail } from "../services/mailer.js";
 
-const router = express.Router();
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const GOOGLE_CLIENT_ID =
+  process.env.GOOGLE_CLIENT_ID ||
+  "513278132086-oph50arjcimdqb5c4a6jjqmflo0a1gg6.apps.googleusercontent.com";
+const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 // 1. User Registration
 router.post("/register", async (req, res) => {
