@@ -272,7 +272,14 @@ export function useMyOrders(userId?: string) {
       } catch {
         // ignore
       }
-      return [];
+
+      // Check local storage
+      try {
+        const stored = JSON.parse(localStorage.getItem("pizzahub_orders") || "[]");
+        return stored as Order[];
+      } catch {
+        return [];
+      }
     },
   });
 }
@@ -314,6 +321,27 @@ export function useOrder(orderId: string) {
       } catch {
         // ignore
       }
+
+      // Check local storage for public deployment fallback
+      try {
+        const stored = JSON.parse(localStorage.getItem("pizzahub_orders") || "[]");
+        const found = stored.find((x: any) => x.id === orderId || x._id === orderId);
+        if (found) {
+          const items: OrderItem[] = (found.items || []).map((it: any, idx: number) => ({
+            id: it._id || `item-${idx}`,
+            order_id: found.id,
+            name: it.name,
+            image_key: it.image_key || "custom",
+            unit_price: it.unit_price,
+            quantity: it.quantity,
+            details: it.details || {},
+          }));
+          return { order: found as Order, items };
+        }
+      } catch {
+        // ignore
+      }
+
       return { order: null, items: [] };
     },
   });
