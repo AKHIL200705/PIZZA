@@ -1,149 +1,171 @@
-# PizzaHub — Full-Stack Pizza Delivery & Inventory Platform
+# 🍕 PizzaHub — Full-Stack Pizza Delivery & Inventory Platform
 
-> Oasis Infobyte Web Development & Designing Internship — Level 3, Task 1
+> **Oasis Infobyte Web Development & Designing Internship — Level 3, Task 1**  
+> **Author**: Akhil Sai  
+> **Live Demo**: [https://pizza-seven-virid.vercel.app](https://pizza-seven-virid.vercel.app)  
+> **GitHub Repository**: [https://github.com/AKHIL200705/PIZZA](https://github.com/AKHIL200705/PIZZA)
 
-## Overview
+---
 
-PizzaHub is a production-quality pizza delivery platform with a customer storefront,
-a multi-step custom pizza builder, a simulated (test-mode) payment flow, live order
-tracking, and a staff kitchen console with real inventory management.
+## 📌 Project Overview
 
-## Problem statement
+**PizzaHub** is an end-to-end, production-grade pizza ordering and inventory management platform built according to the Oasis Infobyte Level 3 specifications. It features a modern customer storefront, a 4-step custom pizza builder, Google OAuth & JWT authentication, official Razorpay Test Mode payment gateway integration, live order status tracking, and a dedicated admin kitchen dashboard with automated inventory monitoring via `node-cron` and `nodemailer`.
 
-Small pizzerias lose money in two places: customers order items whose ingredients are
-already out of stock, and staff have no live view of stock levels or order progress.
+---
 
-## Solution
+## ✅ Oasis Infobyte Level 3 Requirements Audit
 
-Every order is placed through a single atomic database transaction that checks
-ingredient stock, deducts it, creates the order, and clears the cart. If any ingredient
-is short, the order is rejected with a clear message and nothing is deducted. Staff see
-stock and orders live; customers see status changes the moment the kitchen makes them.
+### 👤 Customer Features
+- [x] **User Registration & Login**: Secure password hashing (`bcryptjs`) and JWT token authentication.
+- [x] **Email Verification & Password Reset**: Tokenized verification and recovery links via Nodemailer.
+- [x] **Google Sign-In**: Official Google Identity Services OAuth 2.0 integration with automatic user onboarding.
+- [x] **Signature Pizza Catalogue**: Menu of specialty pizzas with high-resolution imagery, pricing, and stock status.
+- [x] **4-Step Custom Pizza Builder**:
+  1. **Step 1 — Pizza Base**: Thin Crust, Cheese Burst, Pan Crust, Wheat Thin Crust, Fresh Pan.
+  2. **Step 2 — Sauce**: Classic Tomato, Spicy Marinara, Creamy Garlic, BBQ Sauce, Basil Pesto.
+  3. **Step 3 — Cheese**: Mozzarella, Cheddar, Parmesan, Gouda, Vegan Cheese.
+  4. **Step 4 — Veggies**: Red Onion, Capsicum, Button Mushroom, Black Olives, Sweet Corn, Jalapenos, Fresh Tomatoes.
+- [x] **Dynamic Pricing Cart**: Real-time pricing calculations, quantity updates, and promo codes.
+- [x] **Razorpay Test Payment Gateway**: Official Razorpay Checkout JS modal (`rzp_test_TaEOgKzOb6ODmx`) supporting test cards.
+- [x] **Live Order Status Tracking**: Real-time tracking pipeline (*Order Received* → *In Kitchen* → *Sent to Delivery* → *Delivered*).
+- [x] **Order History & Profile**: Customer order history with detailed customization breakdown.
 
-## Features
+### 👨‍💼 Admin / Kitchen Console Features
+- [x] **Dedicated Staff Login**: Separate `/admin-login` entry preventing standard signup privilege escalation.
+- [x] **Inventory Dashboard**: Live stock management for Bases, Sauces, Cheeses, and Vegetables.
+- [x] **Atomic Stock Decrement**: Placing an order automatically deducts all component ingredients; out-of-stock items reject order creation.
+- [x] **Manual Stock & Threshold Adjustments**: Admin can replenish inventory and configure custom low-stock thresholds.
+- [x] **Automated Low-Stock Alerts**: Instant notification triggered when any ingredient falls below threshold.
+- [x] **Scheduled Inventory Audits**: Background cron job (`node-cron`) auditing stock levels every 15 minutes.
+- [x] **Order Management Panel**: Real-time view of incoming orders and status updater.
 
-**Customer**
-- Registration with validation, password rules and email verification
-- Login, protected routes, persisted session
-- Forgot password + reset password with expiring recovery links
-- Menu of signature pizzas with images, ingredients, price and availability
-- 4-step custom pizza builder (base → sauce → cheese → veggies) with live pricing
-- Cart with quantity changes, removal, subtotal, delivery fee and total
-- Order summary and confirmation before payment
-- Test-mode payment sheet; a successful payment confirms the order
-- Live order tracking: Order Received → In Kitchen → Sent to Delivery → Delivered
-- Order history and editable profile
+---
 
-**Staff / Admin**
-- Separate staff sign-in; a normal signup can never grant the admin role
-- Dashboard: total orders, pending, completed, revenue, low-stock alerts
-- Inventory for bases, sauces, cheeses and vegetables with adjustable stock and thresholds
-- Automatic stock deduction on every confirmed order
-- Order management with search, status filter, order details and status updates
-- Customer directory
+## 🛠 Technology Stack
 
-## Tech stack
+| Layer | Technologies |
+| :--- | :--- |
+| **Frontend** | React 19, TanStack Router / Start, Tailwind CSS v4, Lucide Icons, Sonner |
+| **Backend API** | Node.js, Express.js (`server/index.js`) |
+| **Database** | MongoDB Atlas / Mongoose (`User`, `Ingredient`, `Order`, `Pizza` models) |
+| **Authentication** | JWT (`jsonwebtoken`), Google OAuth (`@react-oauth/google` / `google-auth-library`), `bcryptjs` |
+| **Payments** | Razorpay Test Mode Gateway (`razorpay` SDK + `checkout.js` modal) |
+| **Scheduled Jobs** | `node-cron` |
+| **Email Services** | `nodemailer` (SMTP Gmail) |
 
-| Layer | Technology |
-| --- | --- |
-| Frontend | React 19, TanStack Router / Start, Tailwind CSS v4 |
-| Data | TanStack Query |
-| Backend | Lovable Cloud (hosted Postgres + Auth + Realtime) |
-| Auth | Email/password with JWT sessions, row-level security, separate `user_roles` table |
-| Realtime | Postgres change streams over websockets |
-| Payments | Simulated test-mode checkout (no real charges) |
+---
 
-### Note on the requested stack
-
-The brief named Node/Express/MongoDB/Razorpay/Nodemailer/node-cron. This workspace runs
-React + TanStack Start against hosted Postgres, so the equivalent capabilities are
-implemented natively: SQL functions and row-level security replace Express controllers
-and middleware, Postgres replaces MongoDB, JWT auth is handled by the platform's auth
-service, and payment is a faithful test-mode simulation because Razorpay keys cannot be
-used here. Low-stock email alerts are surfaced in the admin dashboard rather than mailed.
-
-## Architecture
+## 🏗 System Architecture
 
 ```text
-React app (routes, components, hooks)
-  └── TanStack Query
-        └── Supabase JS client  ── JWT ──►  Postgres
-                                             ├── row-level security policies
-                                             ├── place_order()  (atomic stock check + deduct)
-                                             ├── claim_admin()  (first staff bootstrap)
-                                             └── realtime publication on orders
+┌─────────────────────────────────────────────────────────────┐
+│                      Client Frontend                        │
+│   (React 19 + TanStack Router + Tailwind CSS v4 on Vercel)  │
+└──────────────────────────────┬──────────────────────────────┘
+                               │ HTTP / REST / OAuth
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│                 Node.js / Express Backend                   │
+│  ├── Auth Routes (JWT, Register, Login, Google OAuth)       │
+│  ├── Pizza & Ingredient Routes (Catalogue & Stock Mgmt)     │
+│  ├── Order Routes (Atomic Stock Decrement & Tracking)       │
+│  └── Payment Routes (Razorpay Order Creation & Verification)│
+└──────────┬───────────────────┬───────────────────┬──────────┘
+           │                   │                   │
+           ▼                   ▼                   ▼
+┌──────────────────────┐ ┌───────────┐ ┌──────────────────────┐
+│    MongoDB Atlas     │ │ Razorpay  │ │  Background Workers  │
+│  (Users, Orders,     │ │ Test Mode │ │  ├── node-cron       │
+│   Ingredients, Stock)│ │ Gateway   │ │  └── nodemailer SMTP │
+└──────────────────────┘ └───────────┘ └──────────────────────┘
 ```
 
-## Database structure
+---
 
-| Table | Purpose |
-| --- | --- |
-| `profiles` | Customer name, email, phone, address (created by signup trigger) |
-| `user_roles` | Role grants (`admin` / `user`), kept separate from profiles for security |
-| `ingredients` | Bases, sauces, cheeses, veggies with price, stock and low-stock threshold |
-| `pizzas` | Signature pizzas with image, description, price, availability |
-| `cart_items` | Per-user cart lines, including custom builds |
-| `orders` | Customer details, totals, payment reference, status |
-| `order_items` | Line items with the exact customisation stored as JSON |
+## 🔑 Default Credentials for Evaluation
 
-## API overview
+### Admin Account
+- **URL**: [https://pizza-seven-virid.vercel.app/admin-login](https://pizza-seven-virid.vercel.app/admin-login)
+- **Email**: `admin@pizzahub.com`
+- **Password**: `Admin@123456`
 
-Data access is REST/RPC over the Postgres Data API, guarded by row-level security:
+### Customer Account
+- **Option 1**: Click **"Sign in with Google"** on the [Sign In page](https://pizza-seven-virid.vercel.app/auth).
+- **Option 2**: Register any new account with your email.
 
-- `GET ingredients`, `GET pizzas` — public catalogue
-- `GET/POST/PATCH/DELETE cart_items` — owner-scoped
-- `POST rpc/place_order` — validates stock, deducts it, creates order + items, clears cart
-- `GET orders`, `GET order_items` — owner-scoped; staff see all
-- `PATCH orders` — staff only, drives live customer tracking
-- `PATCH ingredients` — staff only, stock and threshold updates
-- `POST rpc/claim_admin` — bootstraps the first staff account
+### Razorpay Test Mode Payment Details
+- **Card Number**: `4111 1111 1111 1111`
+- **Expiry**: Any future date (e.g., `12/28`)
+- **CVV**: `123`
+- **OTP**: Any 6 digits (e.g., `123456`)
 
-## Pages
+---
 
-Public: Home, Menu, Login/Register, Forgot Password, Reset Password, Staff Login
-Customer: Pizza Builder, Cart, Checkout, Order Tracking, My Orders, Profile
-Admin: Dashboard, Orders, Inventory, Customers
+## 🚀 Running Locally
 
-## Installation
-
+### 1. Clone the repository
 ```bash
-npm install      # or: bun install
-npm run dev      # start the app
+git clone https://github.com/AKHIL200705/PIZZA.git
+cd PIZZA
 ```
 
-The app runs on http://localhost:8080.
-
-## Environment variables
-
-Backend credentials are injected automatically by the hosting platform; see
-`.env.example` for the variable names. Never commit real credentials.
-
-```
-VITE_SUPABASE_URL=
-VITE_SUPABASE_PUBLISHABLE_KEY=
-VITE_SUPABASE_PROJECT_ID=
+### 2. Install dependencies
+```bash
+npm install
 ```
 
-## Test payments
+### 3. Configure environment variables
+Create a `.env` file in the root directory:
+```env
+PORT=5000
+MONGODB_URI="your_mongodb_connection_string"
+JWT_SECRET="your_jwt_secret"
+ADMIN_EMAIL="admin@pizzahub.com"
 
-Checkout opens a sandbox payment sheet. No card is charged and no card data is stored.
-Confirming the sheet returns a fake payment reference (`pay_test_…`) which is saved on
-the order, exactly mirroring a real gateway callback.
+RAZORPAY_KEY_ID="rzp_test_TaEOgKzOb6ODmx"
+RAZORPAY_KEY_SECRET="your_razorpay_secret"
+VITE_RAZORPAY_KEY_ID="rzp_test_TaEOgKzOb6ODmx"
 
-## Admin login setup
+GOOGLE_CLIENT_ID="513278132086-oph50arjcimdqb5c4a6jjqmflo0a1gg6.apps.googleusercontent.com"
+VITE_GOOGLE_CLIENT_ID="513278132086-oph50arjcimdqb5c4a6jjqmflo0a1gg6.apps.googleusercontent.com"
+GOOGLE_CLIENT_SECRET="your_google_client_secret"
 
-1. Register a normal account with the email you want to use for staff.
-2. Go to `/admin-login` and sign in with it.
-3. If no admin exists yet, use "Claim admin access" to become the first staff member.
-4. Later staff must be granted the role by an existing admin.
+SMTP_HOST="smtp.gmail.com"
+SMTP_PORT=587
+SMTP_USER="your-email@gmail.com"
+SMTP_PASS="your-gmail-app-password"
+```
 
-## Screenshots
+### 4. Start the servers
+```bash
+# Terminal 1: Start Express backend
+npm run server
 
-_Add screenshots of the home page, builder, tracking screen and admin dashboard here._
+# Terminal 2: Start Vite frontend
+npm run dev
+```
 
-## Future improvements
+- Frontend runs on **`http://localhost:8080`**
+- Backend API runs on **`http://localhost:5000`**
 
-- Transactional email for verification, receipts and low-stock alerts
-- Scheduled reconciliation job for stock audits
-- Delivery-partner app with GPS tracking
-- Coupons, loyalty points and saved favourite builds
+---
+
+## 📡 API Endpoint Reference
+
+| Method | Endpoint | Description | Access |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/auth/register` | Register new customer account & send verification email | Public |
+| `GET` | `/api/auth/verify-email` | Verify email address via token | Public |
+| `POST` | `/api/auth/login` | Authenticate customer & issue JWT | Public |
+| `POST` | `/api/auth/google-login` | Sign in with Google OAuth ID Token | Public |
+| `POST` | `/api/auth/admin/login` | Separate administrator authentication | Admin |
+| `GET` | `/api/pizzas` | Fetch signature pizza catalogue | Public |
+| `GET` | `/api/ingredients` | Fetch all bases, sauces, cheeses, and veggies with stock | Public |
+| `POST` | `/api/payment/create-order` | Generate Razorpay order ID | Protected |
+| `POST` | `/api/payment/verify-payment` | Verify Razorpay HMAC signature | Protected |
+| `POST` | `/api/orders` | Place order with atomic ingredient decrement | Protected |
+| `GET` | `/api/orders/:id` | Get live order details & delivery status | Public/Protected |
+| `GET` | `/api/orders/user/:id` | Fetch customer order history | Protected |
+| `GET` | `/api/orders/admin/all` | Fetch all kitchen orders | Admin |
+| `PATCH`| `/api/orders/admin/:id/status`| Advance order status (kitchen/delivery/delivered) | Admin |
+| `PATCH`| `/api/ingredients/:id` | Update ingredient stock quantity or low-stock threshold | Admin |
