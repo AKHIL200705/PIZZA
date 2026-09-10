@@ -66,8 +66,16 @@ export function Footer() {
           </p>
         </div>
       </div>
-      <div className="border-t border-border py-5 text-center text-xs text-muted-foreground">
-        © {new Date().getFullYear()} PizzaHub · Built for the Oasis Infobyte internship
+      <div className="border-t border-border py-5 text-center text-xs text-muted-foreground flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4">
+        <span>© {new Date().getFullYear()} PizzaHub · Built for the Oasis Infobyte internship</span>
+        <span className="hidden sm:inline text-border">·</span>
+        <button
+          type="button"
+          onClick={() => window.dispatchEvent(new CustomEvent("pizzahub:replay_splash"))}
+          className="text-amber-500 hover:text-amber-400 font-medium transition-colors cursor-pointer inline-flex items-center gap-1"
+        >
+          <span>Replay 5s Intro</span> 🎬
+        </button>
       </div>
     </footer>
   );
