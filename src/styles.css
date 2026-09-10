@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
@@ -38,8 +39,8 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-ring-offset-background: var(--background);
-  --font-display: "Bebas Neue", "Archivo Black", system-ui, sans-serif;
-  --font-sans: "Inter Tight", system-ui, -apple-system, sans-serif;
+  --font-display: "Outfit", "Bebas Neue", system-ui, sans-serif;
+  --font-sans: "Plus Jakarta Sans", "Inter", system-ui, -apple-system, sans-serif;
 }
 
 :root {
@@ -97,7 +98,16 @@
   h2,
   h3 {
     letter-spacing: -0.02em;
+    font-family: var(--font-display);
   }
+}
+
+@utility font-display {
+  font-family: var(--font-display);
+}
+
+@utility font-sans {
+  font-family: var(--font-sans);
 }
 
 @utility glass-card {
